@@ -152,8 +152,8 @@ SPECTACULAR_SETTINGS = {
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Укажите порт, на котором работает ваш Vue.js
-    "http://127.0.0.1:5173",
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
 ]
 
 # JWT Configuration
