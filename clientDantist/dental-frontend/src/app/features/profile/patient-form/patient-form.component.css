@@ -1,0 +1,28 @@
+.patient-form {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+div {
+  margin-bottom: 10px;
+}
+label {
+  display: inline-block;
+  width: 100px;
+}
+input {
+  width: 250px;
+  padding: 5px;
+}
+button {
+  padding: 6px 12px;
+  background: #28a745;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+.error {
+  color: red;
+  margin-top: 5px;
+}
