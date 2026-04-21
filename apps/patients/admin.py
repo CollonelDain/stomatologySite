@@ -5,7 +5,7 @@ from .models import Patient, ExaminationCard
 class ExaminationCardInline(admin.TabularInline):
     model = ExaminationCard
     extra = 0
-    fields = ('visit_date', 'diagnosis', 'treatment_done', 'created_at')
+    fields = ('visit_date', 'diagnosis', 'created_at')
     readonly_fields = ('created_at',)
     ordering = ('-visit_date',)
     show_change_link = True
@@ -31,18 +31,14 @@ class PatientAdmin(admin.ModelAdmin):
 @admin.register(ExaminationCard)
 class ExaminationCardAdmin(admin.ModelAdmin):
     list_display = ('patient', 'visit_date', 'diagnosis', 'created_at')
-    list_filter = ('visit_date', 'bite_type', 'face_symmetry')
+    list_filter = ('visit_date',)
     search_fields = ('patient__first_name', 'patient__last_name', 'patient__patient_code', 'diagnosis')
     ordering = ('-visit_date',)
 
     fieldsets = (
         ('Основное', {'fields': ('patient', 'visit_date')}),
-        ('Жалобы и анамнез', {'fields': ('complaint', 'anamnesis_morbi', 'anamnesis_vitae', 'allergies')}),
-        ('Внешний осмотр', {'fields': ('face_symmetry', 'lymph_nodes', 'tmj_status')}),
-        ('Внутриротовой осмотр', {'fields': ('mucosa_status', 'gum_status', 'bite_type')}),
         ('Зубная карта', {'fields': ('teeth_chart',)}),
-        ('Диагноз и лечение', {'fields': ('diagnosis', 'treatment_plan', 'treatment_done')}),
-        ('Рекомендации', {'fields': ('recommendations', 'notes')}),
+        ('Диагноз и лечение', {'fields': ('diagnosis',)}),
         ('Метаданные', {'fields': ('created_at', 'updated_at')}),
     )
     readonly_fields = ('created_at', 'updated_at')
