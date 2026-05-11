@@ -1,0 +1,21 @@
+<div class="login-container">
+  <h2>Вход</h2>
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <div>
+      <label>Email:</label>
+      <input type="email" formControlName="email" />
+      <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error">
+        Введите корректный email.
+      </div>
+    </div>
+    <div>
+      <label>Пароль:</label>
+      <input type="password" formControlName="password" />
+      <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error">
+        Пароль обязателен.
+      </div>
+    </div>
+    <button type="submit" [disabled]="loading">Войти</button>
+    <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+  </form>
+</div>

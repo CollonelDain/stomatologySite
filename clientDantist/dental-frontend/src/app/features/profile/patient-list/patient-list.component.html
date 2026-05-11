@@ -1,0 +1,40 @@
+<div class="patient-list">
+  <div *ngIf="loading">Загрузка...</div>
+  <div *ngIf="!loading && patients.length === 0">Пациенты не найдены.</div>
+  <div *ngFor="let patient of patients" class="patient-item">
+    <div>
+      <strong>{{ patient.first_name }} {{ patient.last_name }}</strong>
+      <div>Email: {{ patient.email || '—' }}</div>
+      <div>Телефон: {{ patient.phone || '—' }}</div>
+    </div>
+    <div>
+      <button (click)="startEdit(patient)">Редактировать</button>
+      <button (click)="deletePatient(patient.id)">Удалить</button>
+    </div>
+
+    <!-- Модальное окно редактирования -->
+    <div *ngIf="editPatient?.id === patient.id" class="modal">
+      <h4>Редактирование пациента</h4>
+      <div>
+        <label>Имя</label>
+        <input [(ngModel)]="editForm.first_name" />
+      </div>
+      <div>
+        <label>Фамилия</label>
+        <input [(ngModel)]="editForm.last_name" />
+      </div>
+      <div>
+        <label>Email</label>
+        <input [(ngModel)]="editForm.email" />
+      </div>
+      <div>
+        <label>Телефон</label>
+        <input [(ngModel)]="editForm.phone" />
+      </div>
+      <div class="actions">
+        <button (click)="saveEdit()">Сохранить</button>
+        <button (click)="cancelEdit()">Отмена</button>
+      </div>
+    </div>
+  </div>
+</div>
