@@ -1,0 +1,38 @@
+<div class="patients-layout">
+  <div class="patients-sidebar">
+    <div class="header">
+      <h2>Мои пациенты ({{ totalCount }})</h2>
+      <div class="header-actions">
+        <input type="text" placeholder="Поиск пациента..." (input)="onSearchInput($event)"
+          class="search-input">
+        <button class="btn-add" (click)="openModal()">+ Добавить пациента</button>
+      </div>
+    </div>
+    <div *ngIf="loading && patients.length === 0" class="loader">Загрузка...</div>
+    <div *ngIf="error" class="error">{{ error }}</div>
+    <cdk-virtual-scroll-viewport *ngIf="!error" itemSize="80" class="virtual-scroll-viewport" (scrolledIndexChange)="onScrollIndexChange($event)">
+      <div *cdkVirtualFor="let patient of patients" class="patient-item" (click)="selectPatient(patient)">
+        <div class="patient-info">
+          <div class="patient-name">{{ patient.full_name }}</div>
+          <div class="patient-details">
+            <span class="code">{{ patient.patient_code }}</span>
+            <span class="visits">Карт: {{ patient.cards_count }}</span>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="loading && patients.length > 0" class="loader-more">Загрузка ещё...</div>
+    </cdk-virtual-scroll-viewport>
+  </div>
+  <div class="patients-detail">
+    <div class="empty-detail" *ngIf="!selectedPatient">Выберите пациента для просмотра</div>
+    <app-patient-detail *ngIf="selectedPatient" [patientId]="selectedPatient.id"
+      (patientUpdated)="refreshList()"></app-patient-detail>
+  </div>
+</div>
+
+<!-- Modal add patient -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <app-patient-form (success)="onPatientCreated()" (cancel)="closeModal()"></app-patient-form>
+  </div>
+</div>

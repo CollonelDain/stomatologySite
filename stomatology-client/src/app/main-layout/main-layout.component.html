@@ -1,0 +1,20 @@
+<header class="app-header">
+  <div class="logo">МедПриложение</div>
+  <div class="user-info" *ngIf="user">
+    <span class="user-name">{{ user.first_name }} {{ user.last_name }}</span>
+    <div class="avatar" (click)="openProfileModal()">
+      {{ (user.first_name && user.first_name.charAt(0)) || '?' }}
+    </div>
+    <button class="logout-btn" (click)="logout()">Выйти</button>
+  </div>
+</header>
+<main class="content">
+  <router-outlet></router-outlet>
+</main>
+
+<div class="modal-overlay" *ngIf="showProfileModal" (click)="closeProfileModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <app-profile-edit *ngIf="user" [user]="user" (success)="onProfileUpdated()"
+      (cancel)="closeProfileModal()"></app-profile-edit>
+  </div>
+</div>

@@ -1,0 +1,214 @@
+/* src/app/patients/components/patient-detail/patient-detail.component.css */
+
+/* Контейнер – flex-вертикаль для заполнения всей высоты */
+.patient-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 16px;
+}
+
+.patient-info-section {
+  flex-shrink: 0;
+}
+
+/* Вертикальное отображение информации о пациенте */
+.info-vertical {
+  background: #f9f9fc;
+  padding: 16px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-vertical div {
+  font-size: 0.95rem;
+  color: #2c3e50;
+}
+
+.info-vertical strong {
+  color: #555;
+  margin-right: 8px;
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.info-header h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #2c3e50;
+}
+
+.edit-patient-btn {
+  background-color: #8fd3fe;
+  color: #2c3e50;
+  width: 180px;
+  border: none;
+  border-radius: 40px;
+  padding: 8px 22px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.edit-patient-btn:hover {
+  background-color: #7bc2ed;
+  transform: translateY(-1px);
+}
+
+/* Разделитель */
+.divider {
+  margin: 0;
+  border: none;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Блок карт – растягивается на всё оставшееся пространство */
+.cards-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.detail-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.cards-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.card-search-input {
+  padding: 8px 16px;
+  border-radius: 40px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+  outline: none;
+  width: 220px;
+}
+
+.card-search-input:focus {
+  border-color: #8fd3fe;
+}
+
+.add-card-btn {
+  background-color: #8fd3fe;
+  color: #2c3e50;
+  width: 180px;
+  border: none;
+  border-radius: 40px;
+  padding: 8px 22px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.add-card-btn:hover {
+  background-color: #7bc2ed;
+  transform: translateY(-1px);
+}
+
+/* Виртуальный скроллинг – занимает всё доступное пространство */
+.virtual-scroll-viewport-cards {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+  min-height: 200px;
+}
+
+/* Сообщения */
+.loader,
+.error,
+.loader-more,
+.end-marker,
+.empty-cards {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.error {
+  color: #d32f2f;
+}
+
+.loader-more {
+  padding: 12px;
+  color: #8fd3fe;
+}
+
+.end-marker {
+  padding: 12px;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.empty-cards {
+  background: #fafafa;
+  border-radius: 16px;
+  margin-top: 20px;
+}
+
+/* Модальные окна (глобальные стили могут их переопределять, но оставляем локальные) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .info-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .virtual-scroll-viewport-cards {
+    min-height: 300px;
+  }
+
+  .cards-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

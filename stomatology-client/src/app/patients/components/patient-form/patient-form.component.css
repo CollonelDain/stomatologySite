@@ -1,0 +1,124 @@
+.patient-form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.patient-form .form-header {
+    background-color: #8fd3fe;
+    padding: 16px 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.patient-form .form-header h3 {
+    color: white;
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 500;
+    line-height: 1.2;
+    overflow: visible;
+}
+
+.patient-form .form-body {
+    padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.form-row {
+    margin-bottom: 18px;
+}
+
+.form-row.two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #2c3e50;
+}
+
+.form-group input,
+.form-group textarea {
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #8fd3fe;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(143, 211, 254, 0.2);
+}
+
+.field-error {
+    color: #d32f2f;
+    font-size: 0.8rem;
+    margin-top: 4px;
+    margin-left: 10px;
+}
+
+.form-error {
+    background: #ffe6e6;
+    color: #d32f2f;
+    padding: 10px;
+    border-radius: 12px;
+    margin: 16px 0;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 14px;
+    margin-top: 28px;
+}
+
+.btn-primary,
+.btn-secondary {
+    border-radius: 40px;
+    padding: 8px 24px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.btn-primary {
+    background: #8fd3fe;
+    color: #2c3e50;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #7bc2ed;
+    transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+    background: #ccc;
+    cursor: default;
+    transform: none;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid #8fd3fe;
+    color: #8fd3fe;
+}
+
+.btn-secondary:hover {
+    background: rgba(143, 211, 254, 0.1);
+    transform: translateY(-1px);
+}

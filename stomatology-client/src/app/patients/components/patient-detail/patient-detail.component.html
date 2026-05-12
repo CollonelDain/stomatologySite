@@ -1,0 +1,71 @@
+<div class="patient-detail">
+  <!-- Блок информации о пациенте -->
+  <div class="patient-info-section" *ngIf="!patientLoading; else patientLoadingBlock">
+    <div *ngIf="patient; else patientErrorBlock">
+      <div class="info-header">
+        <h2>Пациент: {{ patient.full_name }}</h2>
+        <button class="edit-patient-btn" (click)="openEditPatientModal()">Редактировать</button>
+      </div>
+      <div class="info-vertical">
+        <div><strong>Код пациента:</strong> {{ patient.patient_code }}</div>
+        <div><strong>Email:</strong> {{ patient.email || '—' }}</div>
+        <div><strong>Телефон:</strong> {{ patient.phone || '—' }}</div>
+        <div><strong>Дата рождения:</strong> {{ (patient.date_of_birth | date:'dd.MM.yyyy') || '—' }}</div>
+        <div><strong>Зарегистрирован:</strong> {{ patient.created_at | date:'dd.MM.yyyy' }}</div>
+        <div><strong>Последнее изменение:</strong> {{ patient.updated_at | date:'dd.MM.yyyy' }}</div>
+      </div>
+    </div>
+    <ng-template #patientErrorBlock>
+      <div class="error">{{ patientError }}</div>
+    </ng-template>
+  </div>
+  <ng-template #patientLoadingBlock>
+    <div class="loader">Загрузка данных пациента...</div>
+  </ng-template>
+
+  <hr class="divider">
+
+  <!-- Блок истории посещений -->
+  <div class="cards-section">
+    <div class="detail-header">
+      <h2>История посещений</h2>
+      <div class="cards-actions">
+        <input type="date" max="9999-12-31" class="card-search-input" placeholder="Фильтр по дате"
+          (input)="onVisitDateSearch($event)">
+        <button class="add-card-btn" (click)="openAddCardForm()">+ Добавить приём</button>
+      </div>
+    </div>
+
+    <div *ngIf="cardsLoading && cards.length === 0" class="loader">Загрузка приёмов...</div>
+    <div *ngIf="cardsError" class="error">{{ cardsError }}</div>
+
+    <cdk-virtual-scroll-viewport itemSize="90" class="virtual-scroll-viewport-cards"
+      (scrolledIndexChange)="onScrollIndexChange($event)">
+      <div *cdkVirtualFor="let card of cards">
+        <app-medical-card [card]="card" (edit)="onEditCard($event)" (delete)="onDeleteCard($event)"></app-medical-card>
+      </div>
+
+      <div *ngIf="cardsLoading && cards.length > 0" class="loader-more">Загрузка ещё...</div>
+    </cdk-virtual-scroll-viewport>
+
+    <div *ngIf="cards.length === 0 && !cardsLoading && !cardsError" class="empty-cards">
+      Нет посещений. Нажмите "Добавить посещение"
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно: редактирование пациента -->
+<div class="modal-overlay" *ngIf="showEditPatientModal" (click)="closeEditPatientModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <app-patient-form [editData]="editPatientData" (success)="onPatientUpdated()"
+      (cancel)="closeEditPatientModal()"></app-patient-form>
+  </div>
+</div>
+
+<!-- Модальное окно: добавление/редактирование карты -->
+<div class="modal-overlay" *ngIf="showCardForm" (click)="closeCardForm()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <app-medical-card-form [editCard]="editingCard" (success)="onCardFormSuccess($event)"
+      (cancel)="closeCardForm()"></app-medical-card-form>
+  </div>
+</div>

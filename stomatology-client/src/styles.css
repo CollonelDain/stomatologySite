@@ -1,0 +1,115 @@
+/* src/styles.css — глобальные стили приложения */
+
+/* Сброс отступов и базовые настройки */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  font-size: 16px;
+  background-color: #f0f2f5;
+  color: #2c3e50;
+}
+
+/* Убираем стандартные обводки и улучшаем доступность */
+:focus-visible {
+  outline: 2px solid #8fd3fe;
+  outline-offset: 2px;
+}
+
+/* Общие стили для ссылок (если используются) */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Настройка скроллбаров (опционально) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e0e0e0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #8fd3fe;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7bc2ed;
+}
+
+/* Контейнеры модальных окон — базовые стили вынесены глобально,
+   но каждый компонент может их переопределять.
+   Эти стили применяются, если в компонентах нет своих .modal-overlay
+   (для единообразия, но обычно они локальны). */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Базовые стили для форм, если в компонентах не заданы,
+   но лучше использовать локальные стили. Оставляем минимальные */
+input,
+textarea,
+button {
+  font-family: inherit;
+}
+
+/* Утилиты для текста (можно использовать по желанию) */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+/* Адаптивность для модальных окон */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    max-width: none;
+    border-radius: 16px;
+  }
+}
+
+/* Прочие служебные классы (hide, show, clearfix) – при необходимости */
+.clearfix::after {
+  content: '';
+  display: table;
+  clear: both;
+}
