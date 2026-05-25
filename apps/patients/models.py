@@ -42,8 +42,32 @@ class Patient(models.Model):
  
 class ExaminationCard(models.Model):
     """
-    Модель карты осмотра пациента за конкретное посещение.
-    Врач может создать новую или отредактировать последнюю.
+    Карта осмотра пациента за конкретное посещение.
+    Структура данных основана на методических материалах по диагностике
+    гиперестезии дентина зубов (Федоров-Шторина, Дедова и др.)
+
+    subjective (S) - субъективные данные:
+    {
+      "sc": {"sc01": false, "sc02": false, "sc03": false, "sc04": false},
+      "scale_nrs": 5,
+      "sa": {
+        "sad": {"sad01": false, ..., "sad05": false},
+        "sar": "", "san": "", "sam": "",
+        "sap": {"sap01": false, "sap02": false, "sap03": false}
+      }
+    }
+
+    objective (O) - объективные данные:
+    {
+      "or": {"orb": false, "oro": false, "orh": false},
+      "oid_plus": {"oid_plus1": false, ..., "oid_plus7": false},
+      "oid_plus_teeth": [{"tooth_number": 11, "localization": "вестибулярная"}],
+      "oid_minus": {"oid_minus_n": false, "oid_minus_b": false, "oid_minus_s": false},
+      "os": [
+        {"tooth_number": 11, "eod": 6.0,
+         "heat": false, "cold": false, "air": false, "probe": false, "osmosis": false}
+      ]
+    }
     """
     patient = models.ForeignKey(
         Patient,
@@ -51,30 +75,62 @@ class ExaminationCard(models.Model):
         related_name='examination_cards',
         verbose_name='Пациент'
     )
- 
     visit_date = models.DateField(verbose_name='Дата посещения')
- 
-    # ── Зубная карта (JSON) ──────────────────────────────────────────────
-    # Каждый зуб: {"status": "...", "procedure": "...", "notes": ""}
-    # Возможные статусы: healthy, caries, pulpitis, periodontitis,
-    #   crown, implant, missing, extracted, root, filling, other
-    teeth_chart = models.JSONField(
+
+    subjective = models.JSONField(
         default=dict,
         blank=True,
-        verbose_name='Зубная карта'
+        verbose_name='Субъективные данные (жалобы и анамнез)'
     )
- 
-    # ── Диагноз ───────────────────────────────────────────────
-    diagnosis = models.TextField(blank=True, verbose_name='Диагноз')
- 
+    objective = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='Объективные данные (осмотр и диагностика)'
+    )
+    diagnosis_text = models.TextField(
+        blank=True,
+        verbose_name='Заключение врача (редактируемый текст)'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
- 
+
     class Meta:
         db_table = 'examination_cards'
         ordering = ['-visit_date', '-created_at']
         verbose_name = 'Карта осмотра'
         verbose_name_plural = 'Карты осмотра'
- 
+
     def __str__(self):
         return f"{self.patient} — {self.visit_date}"
+
+    @staticmethod
+    def default_subjective():
+        return {
+            "sc": {"sc01": False, "sc02": False, "sc03": False, "sc04": False},
+            "scale_nrs": 0,
+            "sa": {
+                "sad": {
+                    "sad01": False, "sad02": False, "sad03": False,
+                    "sad04": False, "sad05": False
+                },
+                "sar": "", "san": "", "sam": "",
+                "sap": {"sap01": False, "sap02": False, "sap03": False}
+            }
+        }
+
+    @staticmethod
+    def default_objective():
+        return {
+            "or": {"orb": False, "oro": False, "orh": False},
+            "oid_plus": {
+                "oid_plus1": False, "oid_plus2": False, "oid_plus3": False,
+                "oid_plus4": False, "oid_plus5": False, "oid_plus6": False,
+                "oid_plus7": False
+            },
+            "oid_plus_teeth": [],
+            "oid_minus": {
+                "oid_minus_n": False, "oid_minus_b": False, "oid_minus_s": False
+            },
+            "os": []
+        }

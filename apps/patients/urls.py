@@ -30,4 +30,16 @@ urlpatterns = [
         views.ExaminationCardDetailView.as_view(),
         name='card-detail'
     ),
+    
+    # ── Диагностика ────────────────────────────────────────────────────────────
+    path(
+        '<int:patient_pk>/cards/<int:card_pk>/diagnosis/', 
+        views.DiagnosisView.as_view(),
+        name='card-diagnosis'
+    ),
+    path(
+        '<int:patient_pk>/cards/<int:card_pk>/diagnosis/pdf/',
+        views.DiagnosisPDFView.as_view(), 
+        name='card-diagnosis-pdf'
+    ),
 ]

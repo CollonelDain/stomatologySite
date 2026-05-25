@@ -1,8 +1,10 @@
 from django.shortcuts import render
+from django.http import HttpResponse
 
 from rest_framework import generics, permissions, status, filters
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Patient, ExaminationCard
@@ -15,6 +17,9 @@ from .serializers import (
     ExaminationCardCreateSerializer,
 )
 
+from .diagnosis import compute_diagnosis
+from .pdf_generator import generate_diagnosis_pdf
+
 
 # ── Вспомогательная функция ────────────────────────────────────────────────────
 
@@ -24,6 +29,14 @@ def get_patient_for_doctor(patient_pk, doctor):
         return Patient.objects.get(pk=patient_pk, doctor=doctor)
     except Patient.DoesNotExist:
         raise NotFound('Пациент не найден.')
+
+
+def get_card_for_patient(card_pk: int, patient: Patient) -> ExaminationCard:
+    """Возвращает карту осмотра пациента или 404."""
+    try:
+        return ExaminationCard.objects.get(pk=card_pk, patient=patient)
+    except ExaminationCard.DoesNotExist:
+        raise NotFound('Карта осмотра не найдена.')
 
 
 # ── Пациенты ───────────────────────────────────────────────────────────────────
@@ -106,7 +119,7 @@ class ExaminationCardListCreateView(generics.ListCreateAPIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def _get_patient(self):
+    def _get_patient(self) -> Patient:
         return get_patient_for_doctor(self.kwargs['patient_pk'], self.request.user)
 
     def get_queryset(self):
@@ -170,7 +183,7 @@ class LatestExaminationCardView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ExaminationCardDetailSerializer
 
-    def _get_patient(self):
+    def _get_patient(self) -> Patient:
         return get_patient_for_doctor(self.kwargs['patient_pk'], self.request.user)
 
     def get_object(self):
@@ -179,3 +192,57 @@ class LatestExaminationCardView(generics.RetrieveUpdateAPIView):
         if not card:
             raise NotFound('У пациента ещё нет карт осмотра.')
         return card
+    
+
+# ── Диагностика ────────────────────────────────────────────────────────────────
+
+class DiagnosisView(APIView):
+    """
+    GET /api/v1/patients/<patient_id>/cards/<card_id>/diagnosis/
+
+    Возвращает вычисленный диагноз по карте осмотра:
+      - ИРГЗ, ИИГЗ, степень по Федорову
+      - КИДЧЗ (по NRS)
+      - Детализация по каждому зубу
+      - Заключение врача
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, patient_pk: int, card_pk: int):
+        patient = get_patient_for_doctor(patient_pk, request.user)
+        card = get_card_for_patient(card_pk, patient)
+        result = compute_diagnosis(card)
+        return Response(result, status=status.HTTP_200_OK)
+
+
+class DiagnosisPDFView(APIView):
+    """
+    GET /api/v1/patients/<patient_id>/cards/<card_id>/diagnosis/pdf/
+
+    Генерирует и возвращает PDF-отчёт с диагнозом.
+    Ответ: Content-Type: application/pdf
+           Content-Disposition: attachment; filename="diagnosis_<code>_<date>.pdf"
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, patient_pk: int, card_pk: int):
+        patient = get_patient_for_doctor(patient_pk, request.user)
+        card = get_card_for_patient(card_pk, patient)
+
+        diag = compute_diagnosis(card)
+
+        try:
+            pdf_bytes = generate_diagnosis_pdf(diag)
+        except Exception as e:
+            return Response(
+                {'error': f'Ошибка генерации PDF: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        filename = (
+            f"diagnosis_{patient.patient_code}_{card.visit_date}.pdf"
+            .replace(' ', '_')
+        )
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
