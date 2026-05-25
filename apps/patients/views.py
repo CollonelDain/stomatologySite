@@ -39,6 +39,26 @@ def get_card_for_patient(card_pk: int, patient: Patient) -> ExaminationCard:
         raise NotFound('Карта осмотра не найдена.')
 
 
+def generate_diagnosis_text(diag: dict) -> str:
+    parts = []
+    
+    sensitive = diag['n_sensitive_teeth']
+    if sensitive == 0:
+        return 'Гиперестезия дентина не выявлена.'
+    
+    teeth_list = ', '.join(
+        str(t['tooth_number']) 
+        for t in diag['teeth_details'] 
+        if t['is_sensitive']
+    )
+    parts.append(f"Гиперестезия дентина зубов {teeth_list}.")
+    parts.append(diag['fedorov_degree']['interpretation'] + '.')
+    parts.append(f"ИРГЗ: {diag['irgz']['value']}% — {diag['irgz']['interpretation']}.")
+    parts.append(f"ИИГЗ: {diag['iigz']['value']} балла — {diag['iigz']['interpretation']}.")
+    parts.append(diag['kidchz']['interpretation'] + '.')
+    
+    return ' '.join(parts)
+
 # ── Пациенты ───────────────────────────────────────────────────────────────────
 
 class PatientListCreateView(generics.ListCreateAPIView):
@@ -246,3 +266,26 @@ class DiagnosisPDFView(APIView):
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
+
+class DiagnosisGenerateTextView(APIView):
+    """
+    POST /api/v1/patients/<patient_id>/cards/<card_id>/diagnosis/generate-text/
+
+    Автоматически формирует текст заключения из вычисленных индексов.
+    Врач получает готовый текст, может отредактировать его на фронте
+    и сохранить через PATCH .../cards/<id>/ в поле diagnosis_text.
+
+    Тело запроса: пустое — {} или вообще без body.
+    Ответ: { "generated_text": "..." }
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, patient_pk: int, card_pk: int):
+        patient = get_patient_for_doctor(patient_pk, request.user)
+        card = get_card_for_patient(card_pk, patient)
+
+        diag = compute_diagnosis(card)
+        text = generate_diagnosis_text(diag)
+
+        return Response({'generated_text': text}, status=status.HTTP_200_OK)

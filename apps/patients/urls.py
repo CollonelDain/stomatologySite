@@ -42,4 +42,9 @@ urlpatterns = [
         views.DiagnosisPDFView.as_view(), 
         name='card-diagnosis-pdf'
     ),
+    path(
+        '<int:patient_pk>/cards/<int:card_pk>/diagnosis/generate-text/',
+        views.DiagnosisGenerateTextView.as_view(),
+        name='card-diagnosis-generate-text'
+    ),
 ]
