@@ -4,15 +4,18 @@
     <div *ngIf="patient; else patientErrorBlock">
       <div class="info-header">
         <h2>Пациент: {{ patient.full_name }}</h2>
-        <button class="edit-patient-btn" (click)="openEditPatientModal()">Редактировать</button>
+        <button class="toggle-info-btn" (click)="togglePatientInfo()" *ngIf="isMobile">
+          <span class="arrow" [class.collapsed]="!showPatientInfo">▼</span>
+        </button>
       </div>
-      <div class="info-vertical">
+      <div class="info-vertical" *ngIf="showPatientInfo">
         <div><strong>Код пациента:</strong> {{ patient.patient_code }}</div>
         <div><strong>Email:</strong> {{ patient.email || '—' }}</div>
         <div><strong>Телефон:</strong> {{ patient.phone || '—' }}</div>
         <div><strong>Дата рождения:</strong> {{ (patient.date_of_birth | date:'dd.MM.yyyy') || '—' }}</div>
         <div><strong>Зарегистрирован:</strong> {{ patient.created_at | date:'dd.MM.yyyy' }}</div>
         <div><strong>Последнее изменение:</strong> {{ patient.updated_at | date:'dd.MM.yyyy' }}</div>
+        <button class="edit-patient-btn" (click)="openEditPatientModal()">Редактировать пациента</button>
       </div>
     </div>
     <ng-template #patientErrorBlock>
@@ -39,12 +42,11 @@
     <div *ngIf="cardsLoading && cards.length === 0" class="loader">Загрузка приёмов...</div>
     <div *ngIf="cardsError" class="error">{{ cardsError }}</div>
 
-    <cdk-virtual-scroll-viewport itemSize="90" class="virtual-scroll-viewport-cards"
+    <cdk-virtual-scroll-viewport itemSize="51" class="virtual-scroll-viewport-cards"
       (scrolledIndexChange)="onScrollIndexChange($event)">
       <div *cdkVirtualFor="let card of cards">
         <app-medical-card [card]="card" (edit)="onEditCard($event)" (delete)="onDeleteCard($event)"></app-medical-card>
       </div>
-
       <div *ngIf="cardsLoading && cards.length > 0" class="loader-more">Загрузка ещё...</div>
     </cdk-virtual-scroll-viewport>
 
@@ -54,7 +56,7 @@
   </div>
 </div>
 
-<!-- Модальное окно: редактирование пациента -->
+<!-- Модальные окна -->
 <div class="modal-overlay" *ngIf="showEditPatientModal" (click)="closeEditPatientModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <app-patient-form [editData]="editPatientData" (success)="onPatientUpdated()"
@@ -62,7 +64,6 @@
   </div>
 </div>
 
-<!-- Модальное окно: добавление/редактирование карты -->
 <div class="modal-overlay" *ngIf="showCardForm" (click)="closeCardForm()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <app-medical-card-form [editCard]="editingCard" (success)="onCardFormSuccess($event)"

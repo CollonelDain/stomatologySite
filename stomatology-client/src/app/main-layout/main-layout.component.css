@@ -8,35 +8,39 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 32px;
-  height: 80px;
+  width: 100%;
+  padding: 0 24px;
+  height: 70px;
   background-color: #8fd3fe;
   color: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
+  transition: all 0.2s;
 }
 
 .logo {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
 }
 
 .user-name {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 500;
   color: #fff;
+  white-space: nowrap;
 }
 
 .avatar {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   background: white;
   color: #8fd3fe;
   border-radius: 50%;
@@ -44,11 +48,11 @@
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   cursor: pointer;
   transition: 0.2s;
+  flex-shrink: 0;
 }
-
 .avatar:hover {
   transform: scale(1.03);
   background: #f8fcff;
@@ -57,32 +61,102 @@
 .logout-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 40px;
-  padding: 8px 20px;
-  font-size: 1rem;
+  padding: 6px 16px;
+  font-size: 0.9rem;
   font-weight: 500;
   color: #2c3e50;
   cursor: pointer;
   transition: 0.2s;
+  white-space: nowrap;
 }
-
 .logout-btn:hover {
   background: rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
 
-.logout-btn::before {
-  font-size: 1.2rem;
-  display: inline-block;
-}
-
 .content {
-  height: calc(100vh - 80px);
+  height: calc(100vh - 70px);
   overflow: hidden;
   padding: 0;
+}
+
+@media (max-width: 1024px) {
+  .app-header {
+    padding: 0 20px;
+    height: 64px;
+  }
+  .logo {
+    font-size: 1.3rem;
+  }
+  .user-name {
+    font-size: 0.9rem;
+  }
+  .avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+  .logout-btn {
+    padding: 5px 14px;
+    font-size: 0.85rem;
+  }
+  .content {
+    height: calc(100vh - 64px);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0 16px;
+    height: 56px;
+  }
+  .logo {
+    font-size: 1.1rem;
+  }
+  .user-name {
+    display: none;
+  }
+  .avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  .logout-btn {
+    padding: 4px 12px;
+    font-size: 0.8rem;
+  }
+  .content {
+    height: calc(100vh - 56px);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 0 12px;
+    height: 52px;
+  }
+  .logo {
+    font-size: 1rem;
+  }
+  .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  .logout-btn {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+  }
+  .logout-btn span {
+    display: none;
+  }
+  .content {
+    height: calc(100vh - 52px);
+  }
 }
 
 .modal-overlay {
