@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from config import settings
 
@@ -77,6 +78,15 @@ class ExaminationCard(models.Model):
     )
     visit_date = models.DateField(verbose_name='Дата посещения')
 
+    tooth_count = models.PositiveSmallIntegerField(
+        default=32,
+        verbose_name='Количество зубов у пациента',
+        help_text=(
+            'Фактическое число зубов (1–32).'
+        ),
+        validators=[MinValueValidator(1), MaxValueValidator(32)],
+    )
+    
     subjective = models.JSONField(
         default=dict,
         blank=True,
@@ -118,7 +128,7 @@ class ExaminationCard(models.Model):
                 "sap": {"sap01": False, "sap02": False, "sap03": False}
             }
         }
-
+ 
     @staticmethod
     def default_objective():
         return {
