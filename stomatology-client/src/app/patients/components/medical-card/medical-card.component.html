@@ -1,0 +1,10 @@
+<div class="medical-card">
+  <div class="card-header">
+    <span class="visit-date">{{ card.visit_date | date:'dd.MM.yyyy' }}</span>
+    <div class="card-actions">
+      <button class="edit-btn" (click)="onEdit()" title="Редактировать">✏️</button>
+      <button class="delete-btn" (click)="onDelete()" title="Удалить">🗑️</button>
+    </div>
+  </div>
+  <div class="diagnosis-preview">{{ card.diagnosis_text || 'Диагноз не указан' }}</div>
+</div>

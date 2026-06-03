@@ -4,9 +4,8 @@ import { MedicalCard, PatientDetail } from "../../../models";
 import { MedicalCardsService } from "../../services/medical-card.service";
 import { CdkVirtualScrollViewport, ScrollingModule } from "@angular/cdk/scrolling";
 import { MedicalCardComponent } from "../medical-card/medical-card.component";
-import { MedicalCardFormComponent } from "../medical-card/components/medical-card-form/medical-card-form.component";
 import { PatientsService } from "../../services/patients.service";
-import { RouterModule } from "@angular/router";
+import { Router, RouterModule } from "@angular/router";
 import { PatientFormComponent } from "../patient-form/patient-form.component";
 import { debounceTime, distinctUntilChanged, Subject, Subscription } from "rxjs";
 import { UiStateService } from "../../../services/ui-state.service";
@@ -19,7 +18,6 @@ import { UiStateService } from "../../../services/ui-state.service";
     RouterModule,
     ScrollingModule,
     MedicalCardComponent,
-    MedicalCardFormComponent,
     PatientFormComponent
   ],
   templateUrl: './patient-detail.component.html',
@@ -32,6 +30,7 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
   private patientsService = inject(PatientsService);
   private cardsService = inject(MedicalCardsService);
   private uiState = inject(UiStateService);
+  private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
 
   // Данные пациента
@@ -55,10 +54,8 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
   private searchSubject = new Subject<string>();
   private searchSubscription!: Subscription;
 
-  // Модальные окна
+  // Модальное окно редактирования пациента
   showEditPatientModal = false;
-  showCardForm = false;
-  editingCard: MedicalCard | undefined = undefined;
 
   // Скрытие информации о пациенте (мобильная версия)
   showPatientInfo: boolean = true;
@@ -74,7 +71,6 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
       window.addEventListener('resize', () => this.checkMobile());
     }
 
-    // Восстанавливаем состояние свёрнутой информации о пациенте
     const savedCollapsed = this.uiState.getPatientInfoCollapsed();
     if (savedCollapsed !== undefined && this.isMobile) {
       this.showPatientInfo = !savedCollapsed;
@@ -226,14 +222,13 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
     }
   }
 
+  // Навигация к форме создания/редактирования карты
   openAddCardForm(): void {
-    this.editingCard = undefined;
-    this.showCardForm = true;
+    this.router.navigate(['/patients', this.patientId, 'cards', 'new']);
   }
 
   onEditCard(card: MedicalCard): void {
-    this.editingCard = card;
-    this.showCardForm = true;
+    this.router.navigate(['/patients', this.patientId, 'cards', card.id, 'edit']);
   }
 
   onDeleteCard(card: MedicalCard): void {
@@ -243,23 +238,5 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
         error: (err) => console.error(err)
       });
     }
-  }
-
-  closeCardForm(): void {
-    this.showCardForm = false;
-    this.editingCard = undefined;
-  }
-
-  onCardFormSuccess(data: { visit_date: string; diagnosis: string }): void {
-    const request = this.editingCard
-      ? this.cardsService.updateCard(this.patientId, this.editingCard.id, data)
-      : this.cardsService.createCard(this.patientId, data);
-    request.subscribe({
-      next: () => {
-        this.closeCardForm();
-        this.resetAndLoadCards();
-      },
-      error: (err) => console.error(err)
-    });
   }
 }

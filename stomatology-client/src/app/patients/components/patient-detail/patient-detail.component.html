@@ -1,5 +1,5 @@
 <div class="patient-detail">
-  <!-- Блок информации о пациенте -->
+  <!-- Блок информации о пациенте (без изменений) -->
   <div class="patient-info-section" *ngIf="!patientLoading; else patientLoadingBlock">
     <div *ngIf="patient; else patientErrorBlock">
       <div class="info-header">
@@ -33,8 +33,7 @@
     <div class="detail-header">
       <h2>История посещений</h2>
       <div class="cards-actions">
-        <input type="date" max="9999-12-31" class="card-search-input" placeholder="Фильтр по дате"
-          (input)="onVisitDateSearch($event)">
+        <input type="date" class="card-search-input" placeholder="Фильтр по дате" (input)="onVisitDateSearch($event)">
         <button class="add-card-btn" (click)="openAddCardForm()">+ Добавить приём</button>
       </div>
     </div>
@@ -42,31 +41,28 @@
     <div *ngIf="cardsLoading && cards.length === 0" class="loader">Загрузка приёмов...</div>
     <div *ngIf="cardsError" class="error">{{ cardsError }}</div>
 
-    <cdk-virtual-scroll-viewport itemSize="51" class="virtual-scroll-viewport-cards"
+    <cdk-virtual-scroll-viewport itemSize="90" class="virtual-scroll-viewport-cards"
       (scrolledIndexChange)="onScrollIndexChange($event)">
-      <div *cdkVirtualFor="let card of cards">
-        <app-medical-card [card]="card" (edit)="onEditCard($event)" (delete)="onDeleteCard($event)"></app-medical-card>
+      <div *cdkVirtualFor="let card of cards;">
+        <app-medical-card
+          [card]="card"
+          (edit)="onEditCard($event)"
+          (delete)="onDeleteCard($event)"
+        ></app-medical-card>
       </div>
       <div *ngIf="cardsLoading && cards.length > 0" class="loader-more">Загрузка ещё...</div>
     </cdk-virtual-scroll-viewport>
 
     <div *ngIf="cards.length === 0 && !cardsLoading && !cardsError" class="empty-cards">
-      Нет посещений. Нажмите "Добавить посещение"
+      Нет посещений. Нажмите "Добавить приём"
     </div>
   </div>
 </div>
 
-<!-- Модальные окна -->
+<!-- Модальное окно редактирования пациента (без изменений) -->
 <div class="modal-overlay" *ngIf="showEditPatientModal" (click)="closeEditPatientModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <app-patient-form [editData]="editPatientData" (success)="onPatientUpdated()"
       (cancel)="closeEditPatientModal()"></app-patient-form>
-  </div>
-</div>
-
-<div class="modal-overlay" *ngIf="showCardForm" (click)="closeCardForm()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <app-medical-card-form [editCard]="editingCard" (success)="onCardFormSuccess($event)"
-      (cancel)="closeCardForm()"></app-medical-card-form>
   </div>
 </div>
