@@ -1,11 +1,15 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+// src/app/patients/components/patients-list/patients-list.component.ts
+
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PaginatedResponse, PatientsService } from '../../services/patients.service';
+import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { PatientsService, PaginatedResponse } from '../../services/patients.service';
 import { PatientsList } from '../../../models';
 import { PatientFormComponent } from '../patient-form/patient-form.component';
 import { PatientDetailComponent } from '../patient-detail/patient-detail.component';
-import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
-import { debounceTime, distinctUntilChanged, Subject, Subscription } from 'rxjs';
+import { UiStateService } from '../../../services/ui-state.service';
 
 @Component({
   selector: 'app-patients-list',
@@ -18,6 +22,7 @@ export class PatientsListComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(CdkVirtualScrollViewport) viewport!: CdkVirtualScrollViewport;
 
   private patientsService = inject(PatientsService);
+  private uiState = inject(UiStateService);
 
   patients: PatientsList[] = [];
   loading = false;
@@ -35,12 +40,19 @@ export class PatientsListComponent implements OnInit, AfterViewInit, OnDestroy {
   private searchSubscription!: Subscription;
 
   ngOnInit(): void {
-    this.loadPage(1);
+    // Восстанавливаем поисковый запрос
+    const savedSearch = this.uiState.getPatientSearchQuery();
+    if (savedSearch) {
+      this.searchTerm = savedSearch;
+    }
+    this.loadPage(1, this.searchTerm);
+
     this.searchSubscription = this.searchSubject.pipe(
       debounceTime(400),
       distinctUntilChanged()
     ).subscribe(term => {
       this.searchTerm = term;
+      this.uiState.setPatientSearchQuery(term);
       this.refreshList();
     });
   }
@@ -55,19 +67,10 @@ export class PatientsListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.searchSubscription?.unsubscribe();
   }
 
-  private checkScrollEnd(): void {
-    if (!this.viewport) return;
-    const nativeElement = this.viewport.getElementRef().nativeElement;
-    const { scrollTop, scrollHeight, clientHeight } = nativeElement;
-    if (scrollTop + clientHeight >= scrollHeight - this.SCROLL_THRESHOLD && this.canLoadMore()) {
-      this.loadNextPage();
-    }
-  }
-
-  loadPage(page: number): void {
+  loadPage(page: number, search: string): void {
     if (this.loading) return;
     this.loading = true;
-    this.patientsService.getPatientsPage(page, this.searchTerm).subscribe({
+    this.patientsService.getPatientsPage(page, search).subscribe({
       next: (response: PaginatedResponse<PatientsList>) => {
         if (page === 1) this.patients = [];
         this.patients = [...this.patients, ...response.results];
@@ -75,6 +78,15 @@ export class PatientsListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.nextPageUrl = response.next;
         this.currentPage = page;
         this.loading = false;
+
+        // Восстановление выбранного пациента (после загрузки первой страницы или после refresh)
+        if (page === 1) {
+          const savedId = this.uiState.getLastSelectedPatientId();
+          if (savedId && !this.selectedPatient) {
+            const found = this.patients.find(p => p.id === savedId);
+            if (found) this.selectPatient(found);
+          }
+        }
       },
       error: (err) => {
         console.error(err);
@@ -84,13 +96,13 @@ export class PatientsListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  onScrollIndexChange(index: number): void {
-  // Если мы приблизились к последним N элементам, загружаем следующую страницу
-  const THRESHOLD = 5;
-  if (this.patients.length > 0 && index >= this.patients.length - THRESHOLD && this.canLoadMore()) {
-    this.loadNextPage();
+  refreshList(): void {
+    this.patients = [];
+    this.currentPage = 1;
+    this.nextPageUrl = null;
+    this.totalCount = 0;
+    this.loadPage(1, this.searchTerm);
   }
-}
 
   canLoadMore(): boolean {
     return !this.loading && this.nextPageUrl !== null && this.patients.length < this.totalCount;
@@ -98,12 +110,33 @@ export class PatientsListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   loadNextPage(): void {
     if (this.canLoadMore()) {
-      this.loadPage(this.currentPage + 1);
+      this.loadPage(this.currentPage + 1, this.searchTerm);
+    }
+  }
+
+  private checkScrollEnd(): void {
+    if (!this.viewport) return;
+    const native = this.viewport.getElementRef().nativeElement;
+    if (native.scrollTop + native.clientHeight >= native.scrollHeight - this.SCROLL_THRESHOLD && this.canLoadMore()) {
+      this.loadNextPage();
+    }
+  }
+
+  onScrollIndexChange(index: number): void {
+    const THRESHOLD = 5;
+    if (this.patients.length > 0 && index >= this.patients.length - THRESHOLD && this.canLoadMore()) {
+      this.loadNextPage();
     }
   }
 
   selectPatient(patient: PatientsList): void {
     this.selectedPatient = patient;
+    this.uiState.setLastSelectedPatientId(patient.id);
+  }
+
+  onSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchSubject.next(value);
   }
 
   openModal(): void {
@@ -117,18 +150,5 @@ export class PatientsListComponent implements OnInit, AfterViewInit, OnDestroy {
   onPatientCreated(): void {
     this.closeModal();
     this.refreshList();
-  }
-
-  refreshList(): void {
-    this.patients = [];
-    this.currentPage = 1;
-    this.nextPageUrl = null;
-    this.totalCount = 0;
-    this.loadPage(1);
-  }
-
-  onSearchInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.searchSubject.next(value);
   }
 }

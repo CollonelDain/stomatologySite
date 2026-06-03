@@ -9,6 +9,7 @@ import { PatientsService } from "../../services/patients.service";
 import { RouterModule } from "@angular/router";
 import { PatientFormComponent } from "../patient-form/patient-form.component";
 import { debounceTime, distinctUntilChanged, Subject, Subscription } from "rxjs";
+import { UiStateService } from "../../../services/ui-state.service";
 
 @Component({
   selector: 'app-patient-detail',
@@ -30,6 +31,8 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
 
   private patientsService = inject(PatientsService);
   private cardsService = inject(MedicalCardsService);
+  private uiState = inject(UiStateService);
+  private platformId = inject(PLATFORM_ID);
 
   // Данные пациента
   patient: PatientDetail | null = null;
@@ -61,13 +64,20 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
   showPatientInfo: boolean = true;
   isMobile: boolean = false;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+    this.platformId = platformId;
+  }
 
   ngOnInit(): void {
-    // Определяем, мобильное ли устройство (ширина <= 768px)
     if (isPlatformBrowser(this.platformId)) {
       this.checkMobile();
       window.addEventListener('resize', () => this.checkMobile());
+    }
+
+    // Восстанавливаем состояние свёрнутой информации о пациенте
+    const savedCollapsed = this.uiState.getPatientInfoCollapsed();
+    if (savedCollapsed !== undefined && this.isMobile) {
+      this.showPatientInfo = !savedCollapsed;
     }
 
     this.searchSubscription = this.searchSubject.pipe(
@@ -110,6 +120,7 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
   togglePatientInfo(): void {
     if (this.isMobile) {
       this.showPatientInfo = !this.showPatientInfo;
+      this.uiState.setPatientInfoCollapsed(!this.showPatientInfo);
     }
   }
 
