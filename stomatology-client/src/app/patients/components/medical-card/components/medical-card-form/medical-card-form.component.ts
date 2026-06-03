@@ -1,7 +1,7 @@
 import { Component, EventEmitter, inject, Input, OnInit, Output } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
-import { MedicalCard } from "../../../../../models";
 import { CommonModule } from "@angular/common";
+import { MedicalCard } from "../../../../../models";
 
 @Component({
     selector: 'app-medical-card-form',

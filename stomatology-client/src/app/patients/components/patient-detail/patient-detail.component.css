@@ -20,35 +20,59 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  transition: all 0.2s;
 }
-
 .info-vertical div {
   font-size: 0.95rem;
   color: #2c3e50;
 }
-
 .info-vertical strong {
   color: #555;
   margin-right: 8px;
 }
 
+/* Шапка блока пациента (имя + стрелка) */
 .info-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
-
 .info-header h2 {
   margin: 0;
   font-size: 1.6rem;
   color: #2c3e50;
+  flex: 1;
+}
+/* Кнопка-стрелка (только на мобильных) */
+.toggle-info-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: #8fd3fe;
+  transition: transform 0.2s;
+}
+.toggle-info-btn .arrow {
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.toggle-info-btn .arrow.collapsed {
+  transform: rotate(-90deg);
 }
 
+/* Кнопка редактирования пациента – унифицирована с .btn-add из patients-list */
 .edit-patient-btn {
   background-color: #8fd3fe;
   color: #2c3e50;
-  width: 180px;
   border: none;
   border-radius: 40px;
   padding: 8px 22px;
@@ -56,8 +80,9 @@
   font-size: 0.95rem;
   font-weight: 500;
   transition: 0.2s;
+  width: auto;
+  margin-top: 8px;
 }
-
 .edit-patient-btn:hover {
   background-color: #7bc2ed;
   transform: translateY(-1px);
@@ -77,28 +102,26 @@
   display: flex;
   flex-direction: column;
 }
-
 .detail-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 12px;
 }
-
-.detail-header h3 {
+.detail-header h2 {
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1.4rem;
   color: #2c3e50;
 }
-
 .cards-actions {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
-
 .card-search-input {
   padding: 8px 16px;
   border-radius: 40px;
@@ -107,15 +130,14 @@
   outline: none;
   width: 220px;
 }
-
 .card-search-input:focus {
   border-color: #8fd3fe;
 }
 
+/* Кнопка добавления приёма – унифицирована с .btn-add из patients-list */
 .add-card-btn {
   background-color: #8fd3fe;
   color: #2c3e50;
-  width: 180px;
   border: none;
   border-radius: 40px;
   padding: 8px 22px;
@@ -123,8 +145,8 @@
   font-size: 0.95rem;
   font-weight: 500;
   transition: 0.2s;
+  width: auto;
 }
-
 .add-card-btn:hover {
   background-color: #7bc2ed;
   transform: translateY(-1px);
@@ -139,39 +161,31 @@
 }
 
 /* Сообщения */
-.loader,
-.error,
-.loader-more,
-.end-marker,
-.empty-cards {
+.loader, .error, .loader-more, .end-marker, .empty-cards {
   text-align: center;
   padding: 20px;
   font-size: 0.9rem;
   color: #666;
 }
-
 .error {
   color: #d32f2f;
 }
-
 .loader-more {
   padding: 12px;
   color: #8fd3fe;
 }
-
 .end-marker {
   padding: 12px;
   font-size: 0.8rem;
   color: #aaa;
 }
-
 .empty-cards {
   background: #fafafa;
   border-radius: 16px;
   margin-top: 20px;
 }
 
-/* Модальные окна (глобальные стили могут их переопределять, но оставляем локальные) */
+/* Модальные окна */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -184,7 +198,6 @@
   justify-content: center;
   z-index: 1000;
 }
-
 .modal-content {
   background: white;
   border-radius: 20px;
@@ -197,18 +210,140 @@
   box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
+/* ========== АДАПТАЦИЯ ДЛЯ РАЗНЫХ ЭКРАНОВ ========== */
+
+/* Планшеты и небольшие ноутбуки (≤1024px) */
+@media (max-width: 1024px) {
   .info-header h2 {
     font-size: 1.4rem;
   }
-
-  .virtual-scroll-viewport-cards {
-    min-height: 300px;
+  .detail-header h2 {
+    font-size: 1.2rem;
   }
+  .edit-patient-btn,
+  .add-card-btn {
+    padding: 6px 16px;
+    font-size: 0.85rem;
+  }
+  .card-search-input {
+    width: 180px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+}
 
+/* Узкие экраны (≤768px) — мобильные, но кнопки в строке (как в patients-list) */
+@media (max-width: 810px) {
+  .info-header {
+    flex-direction: row;
+    align-items: center;
+  }
+  .info-header h2 {
+    font-size: 1.2rem;
+  }
+  .toggle-info-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.6rem;
+  }
+  .edit-patient-btn {
+    padding: 6px 16px;
+    font-size: 0.75rem;
+    width: auto;           /* не растягивается */
+    margin-top: 8px;
+  }
+  .info-vertical {
+    padding: 12px;
+    gap: 8px;
+  }
+  .info-vertical div {
+    font-size: 0.75rem;
+  }
+  .detail-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  /* .cards-actions остаётся в строку (flex-direction: row) */
   .cards-actions {
+    flex-direction: row;
     flex-wrap: wrap;
     justify-content: flex-end;
   }
+  .card-search-input {
+    width: auto;
+    flex: 1;
+    width: 140px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+  .add-card-btn {
+    width: auto;
+    padding: 6px 16px;
+    font-size: 0.75rem;
+  }
+  .virtual-scroll-viewport-cards {
+    min-height: 250px;
+  }
+}
+
+/* Мобильные телефоны (≤480px) — дополнительное сжатие, но кнопки по-прежнему в строке, если помещаются */
+@media (max-width: 652px) {
+  .cards-actions {
+    justify-content: flex-start;
+  }
+  .info-header h2 {
+    font-size: 1.0rem;
+  }
+  .toggle-info-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.3rem;
+  }
+  .edit-patient-btn {
+    font-size: 0.8rem;
+    padding: 5px 12px;
+  }
+  .info-vertical div {
+    font-size: 0.8rem;
+  }
+  .detail-header h2 {
+    font-size: 1rem;
+  }
+  .card-search-input {
+    min-width: auto;
+    font-size: 0.7rem;
+    padding: 5px 10px;
+    width: 120px;            /* фиксированная ширина 120px */
+    flex: none; 
+  }
+  .add-card-btn {
+    font-size: 0.7rem;
+    padding: 5px 12px;
+  }
+  .virtual-scroll-viewport-cards {
+    min-height: 220px;
+  }
+
+
+  .patients-layout {
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;      /* предотвращаем двойную прокрутку на уровне layout */
+  }
+  .patients-sidebar {
+    width: 100%;
+    max-height: 35vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .patients-detail {
+    flex: 1;               /* занимает всё оставшееся пространство */
+    min-height: 0;         /* разрешает сжатие */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;      /* дочерний элемент будет прокручиваться сам */
+    width: 100%;
+    padding: 12px;
+  }
+  /* Если на 480px кнопки не помещаются в строку, они перенесутся (flex-wrap: wrap) – это допустимо */
 }

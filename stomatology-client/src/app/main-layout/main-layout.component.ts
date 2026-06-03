@@ -22,7 +22,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userSub = this.auth.currentUser$.subscribe(user => this.user = user);
-    if (!this.user && this.auth.isAuthenticated()) {
+
+    // Если пользователь ещё не загружен, пытаемся получить профиль.
+    // guard уже должен был это сделать, но для страховки:
+    if (!this.user) {
       this.auth.getProfile().subscribe({
         error: () => this.router.navigate(['/login'])
       });
@@ -50,5 +53,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   onProfileUpdated(): void {
     this.closeProfileModal();
+    // После обновления профиля – перезагружаем данные пользователя
+    this.auth.getProfile().subscribe();
   }
 }

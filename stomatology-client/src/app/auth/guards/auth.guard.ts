@@ -8,10 +8,13 @@ export const authGuard = (): Observable<boolean> => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
+  // Страница логина всегда доступна
   if (router.url === '/login') {
     return of(true);
   }
 
+  // Пытаемся загрузить профиль – сервер проверит куку.
+  // Если кука валидна, вернёт пользователя; иначе – 401.
   return auth.getProfile().pipe(
     map(() => true),
     catchError(() => {

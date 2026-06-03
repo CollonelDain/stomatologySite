@@ -1,5 +1,5 @@
-import { CommonModule } from "@angular/common";
-import { AfterViewInit, Component, EventEmitter, inject, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from "@angular/core";
+import { CommonModule, isPlatformBrowser } from "@angular/common";
+import { AfterViewInit, Component, EventEmitter, inject, Input, OnChanges, OnDestroy, OnInit, Output, PLATFORM_ID, SimpleChanges, ViewChild, Inject } from "@angular/core";
 import { MedicalCard, PatientDetail } from "../../../models";
 import { MedicalCardsService } from "../../services/medical-card.service";
 import { CdkVirtualScrollViewport, ScrollingModule } from "@angular/cdk/scrolling";
@@ -9,6 +9,7 @@ import { PatientsService } from "../../services/patients.service";
 import { RouterModule } from "@angular/router";
 import { PatientFormComponent } from "../patient-form/patient-form.component";
 import { debounceTime, distinctUntilChanged, Subject, Subscription } from "rxjs";
+import { UiStateService } from "../../../services/ui-state.service";
 
 @Component({
   selector: 'app-patient-detail',
@@ -30,6 +31,8 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
 
   private patientsService = inject(PatientsService);
   private cardsService = inject(MedicalCardsService);
+  private uiState = inject(UiStateService);
+  private platformId = inject(PLATFORM_ID);
 
   // Данные пациента
   patient: PatientDetail | null = null;
@@ -57,7 +60,26 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
   showCardForm = false;
   editingCard: MedicalCard | undefined = undefined;
 
+  // Скрытие информации о пациенте (мобильная версия)
+  showPatientInfo: boolean = true;
+  isMobile: boolean = false;
+
+  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+    this.platformId = platformId;
+  }
+
   ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.checkMobile();
+      window.addEventListener('resize', () => this.checkMobile());
+    }
+
+    // Восстанавливаем состояние свёрнутой информации о пациенте
+    const savedCollapsed = this.uiState.getPatientInfoCollapsed();
+    if (savedCollapsed !== undefined && this.isMobile) {
+      this.showPatientInfo = !savedCollapsed;
+    }
+
     this.searchSubscription = this.searchSubject.pipe(
       debounceTime(400),
       distinctUntilChanged()
@@ -69,6 +91,9 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
 
   ngOnDestroy(): void {
     this.searchSubscription?.unsubscribe();
+    if (isPlatformBrowser(this.platformId)) {
+      window.removeEventListener('resize', () => this.checkMobile());
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -81,6 +106,21 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
   ngAfterViewInit(): void {
     if (this.viewport) {
       this.viewport.elementScrolled().subscribe(() => this.checkScrollEnd());
+    }
+  }
+
+  // ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
+  private checkMobile(): void {
+    this.isMobile = window.innerWidth <= 768;
+    if (!this.isMobile) {
+      this.showPatientInfo = true;
+    }
+  }
+
+  togglePatientInfo(): void {
+    if (this.isMobile) {
+      this.showPatientInfo = !this.showPatientInfo;
+      this.uiState.setPatientInfoCollapsed(!this.showPatientInfo);
     }
   }
 
@@ -159,7 +199,6 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
         this.nextCardsUrl = response.next;
         this.currentPage = page;
         this.cardsLoading = false;
-        // Принудительно пересчитываем размеры виртуального скролла
         setTimeout(() => this.viewport?.checkViewportSize(), 50);
       },
       error: (err) => {
@@ -187,7 +226,6 @@ export class PatientDetailComponent implements OnChanges, AfterViewInit, OnInit,
     }
   }
 
-  // Обработчики для карт
   openAddCardForm(): void {
     this.editingCard = undefined;
     this.showCardForm = true;
