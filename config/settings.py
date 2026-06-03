@@ -34,6 +34,14 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS + [
     'drf_spectacular',
 ]
+INSTALLED_APPS += ['rest_framework_simplejwt.token_blacklist']
+
+
+JWT_AUTH_COOKIE         = 'access_token'
+JWT_AUTH_REFRESH_COOKIE = 'refresh_token'
+JWT_COOKIE_SECURE       = not DEBUG
+JWT_COOKIE_SAMESITE     = 'Lax'
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -112,7 +120,7 @@ AUTH_USER_MODEL = 'accounts.User'
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'apps.accounts.authentication.CookieJWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -140,15 +148,16 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API documentation',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-    'SECURITY': [
-        {
-            'Bearer': {
-                'type': 'http',
-                'scheme': 'bearer',
-                'bearerFormat': 'JWT',
+    'SECURITY': [{'cookieAuth': []}],
+    'COMPONENTS': {
+        'securitySchemes': {
+            'cookieAuth': {
+                'type': 'apiKey',
+                'in': 'cookie',
+                'name': 'access_token',  # должно совпадать с JWT_AUTH_COOKIE
             }
         }
-    ],
+    },
 }
 
 

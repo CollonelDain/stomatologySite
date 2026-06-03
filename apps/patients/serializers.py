@@ -51,15 +51,10 @@ def validate_subjective(value):
 
 
 def validate_objective(value):
-    """Валидация блока объективных данных (O)."""
     if not isinstance(value, dict):
         raise serializers.ValidationError('objective должен быть объектом.')
-
-    # Or
     or_data = value.get('or', {})
     _validate_bool_keys(or_data, ['orb', 'oro', 'orh'], 'or')
-
-    # Oid+
     oid_plus = value.get('oid_plus', {})
     _validate_bool_keys(
         oid_plus,
@@ -67,12 +62,8 @@ def validate_objective(value):
          'oid_plus5', 'oid_plus6', 'oid_plus7'],
         'oid_plus'
     )
-
-    # Oid-
     oid_minus = value.get('oid_minus', {})
     _validate_bool_keys(oid_minus, ['oid_minus_n', 'oid_minus_b', 'oid_minus_s'], 'oid_minus')
-
-    # Oic+ — список зубов с дефектами
     oid_plus_teeth = value.get('oid_plus_teeth', [])
     if not isinstance(oid_plus_teeth, list):
         raise serializers.ValidationError('oid_plus_teeth должен быть массивом.')
@@ -81,12 +72,9 @@ def validate_objective(value):
             raise serializers.ValidationError('Каждый элемент oid_plus_teeth должен быть объектом.')
         if 'tooth_number' not in item:
             raise serializers.ValidationError('Каждый зуб в oid_plus_teeth должен иметь tooth_number.')
-
-    # Os — специальная диагностика по зубам
     os_list = value.get('os', [])
     if not isinstance(os_list, list):
         raise serializers.ValidationError('os должен быть массивом.')
-
     seen_teeth = set()
     for tooth in os_list:
         if not isinstance(tooth, dict):
@@ -97,18 +85,15 @@ def validate_objective(value):
         if tn in seen_teeth:
             raise serializers.ValidationError(f'Зуб {tn} в os указан дважды.')
         seen_teeth.add(tn)
-
         eod = tooth.get('eod')
         if eod is not None and not isinstance(eod, (int, float)):
             raise serializers.ValidationError(f'os[{tn}].eod должен быть числом (мкА).')
-
         for stim in ['heat', 'cold', 'air', 'probe', 'osmosis']:
             val = tooth.get(stim)
             if val is not None and not isinstance(val, bool):
                 raise serializers.ValidationError(
                     f'os[{tn}].{stim} должен быть boolean (true/false).'
                 )
-
     return value
 
 
@@ -120,7 +105,7 @@ class ExaminationCardListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExaminationCard
         fields = (
-            'id', 'visit_date', 'diagnosis_text',
+            'id', 'visit_date', 'tooth_count', 'diagnosis_text',
             'created_at', 'updated_at'
         )
         read_only_fields = ('id', 'created_at', 'updated_at')
@@ -132,19 +117,40 @@ class ExaminationCardDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExaminationCard
         fields = (
-            'id', 'patient', 'visit_date',
+            'id', 'patient', 'visit_date', 'tooth_count',
             'subjective', 'objective',
             'diagnosis_text',
             'created_at', 'updated_at'
         )
         read_only_fields = ('id', 'patient', 'created_at', 'updated_at')
 
+    def validate_tooth_count(self, value):
+        if not (1 <= value <= 32):
+            raise serializers.ValidationError('tooth_count должен быть от 1 до 32.')
+        return value
+    
     def validate_subjective(self, value):
         return validate_subjective(value)
 
     def validate_objective(self, value):
         return validate_objective(value)
 
+    def validate(self, attrs):
+        tooth_count = attrs.get(
+            'tooth_count',
+            self.instance.tooth_count if self.instance else 32
+        )
+        objective = attrs.get(
+            'objective',
+            self.instance.objective if self.instance else {}
+        )
+        os_teeth = (objective or {}).get('os', [])
+        if len(os_teeth) > tooth_count:
+            raise serializers.ValidationError(
+                f'Число осмотренных зубов ({len(os_teeth)}) '
+                f'превышает tooth_count ({tooth_count}).'
+            )
+        return attrs
 
 
 class ExaminationCardCreateSerializer(ExaminationCardDetailSerializer):

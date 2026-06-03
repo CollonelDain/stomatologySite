@@ -5,7 +5,7 @@ from .models import Patient, ExaminationCard
 class ExaminationCardInline(admin.TabularInline):
     model = ExaminationCard
     extra = 0
-    fields = ('visit_date', 'diagnosis_text', 'created_at')
+    fields = ('visit_date', 'tooth_count', 'diagnosis_text', 'created_at')
     readonly_fields = ('created_at',)
     ordering = ('-visit_date',)
     show_change_link = True
@@ -30,7 +30,7 @@ class PatientAdmin(admin.ModelAdmin):
 
 @admin.register(ExaminationCard)
 class ExaminationCardAdmin(admin.ModelAdmin):
-    list_display = ('patient', 'visit_date', 'diagnosis_text', 'created_at')
+    list_display = ('patient', 'visit_date', 'tooth_count', 'diagnosis_text', 'created_at')
     list_filter = ('visit_date',)
     search_fields = ('patient__first_name', 'patient__last_name', 'patient__patient_code')
     ordering = ('-visit_date',)

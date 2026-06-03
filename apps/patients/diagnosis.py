@@ -102,10 +102,20 @@ def _eod_degree(eod_mka: float | None) -> str | None:
 def compute_diagnosis(card) -> dict:
     """
     Вычисляет все диагностические индексы по данным карты осмотра.
-    Возвращает словарь с результатами, готовый для сериализации.
+
+    Ключевое отличие от классической формулы:
+      ИРГЗ = (n_sensitive / tooth_count) × 100
+
+    где tooth_count — фактическое число зубов пациента (поле карты),
+    а не просто количество осмотренных зубов. Это корректно для пациентов
+    с удалёнными зубами: если у человека 28 зубов и 7 из них чувствительны,
+    ИРГЗ = 25%, а не 7/7*100 = 100% при осмотре только этих зубов.
     """
     subj = card.subjective or {}
     obj = card.objective or {}
+
+    # tooth_count — фактическое число зубов (по умолчанию 32)
+    tooth_count: int = getattr(card, 'tooth_count', 32) or 32
 
     # ── Субъективные данные ───────────────────────────────────────────────────
     sc = subj.get('sc', {})
@@ -134,11 +144,12 @@ def compute_diagnosis(card) -> dict:
         if any([t.get('heat'), t.get('cold'), t.get('air'),
                 t.get('probe'), t.get('osmosis')])
     ]
-    n_total = len(os_teeth)
+    n_examined = len(os_teeth)      # осмотрено зубов
     n_sensitive = len(sensitive_teeth)
 
     # ── ИРГЗ (Федоров–Шторина) ────────────────────────────────────────────────
-    irgz_value = round((n_sensitive / n_total * 100), 1) if n_total > 0 else 0.0
+    irgz_denominator = max(tooth_count, n_examined)
+    irgz_value = round((n_sensitive / irgz_denominator * 100), 1) if irgz_denominator > 0 else 0.0
     if irgz_value == 0:
         irgz_form = 'Гиперестезия не выявлена'
     elif irgz_value <= 25:
@@ -230,7 +241,8 @@ def compute_diagnosis(card) -> dict:
         'oid_plus_teeth': obj.get('oid_plus_teeth', []),
 
         # Индексы
-        'n_total_teeth_examined': n_total,
+        'tooth_count': tooth_count,
+        'n_examined_teeth': n_examined,
         'n_sensitive_teeth': n_sensitive,
 
         'irgz': {
@@ -238,6 +250,7 @@ def compute_diagnosis(card) -> dict:
             'unit': '%',
             'interpretation': irgz_form,
             'description': 'Индекс распространённости гиперестезии зубов (Федоров–Шторина, 1988)',
+            'formula': f'{n_sensitive} / {irgz_denominator} × 100',
         },
         'iigz': {
             'value': iigz_value,
