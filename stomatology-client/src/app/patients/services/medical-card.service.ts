@@ -32,4 +32,10 @@ export class MedicalCardsService {
   deleteCard(patientId: number, cardId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/patients/${patientId}/cards/${cardId}/`);
   }
+
+  downloadPdf(patientId: number, cardId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/patients/${patientId}/cards/${cardId}/diagnosis/pdf/`, {
+      responseType: 'blob'
+    });
+  }
 }

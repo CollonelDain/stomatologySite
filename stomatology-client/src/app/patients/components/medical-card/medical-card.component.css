@@ -24,7 +24,9 @@
   display: flex;
   gap: 8px;
 }
-.edit-btn, .delete-btn {
+.report-btn,
+.edit-btn,
+.delete-btn {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -32,8 +34,18 @@
   opacity: 0.6;
   transition: 0.2s;
 }
-.edit-btn:hover { opacity: 1; color: #1976d2; }
-.delete-btn:hover { opacity: 1; color: #d32f2f; }
+.report-btn:hover {
+  opacity: 1;
+  color: #4caf50;
+}
+.edit-btn:hover {
+  opacity: 1;
+  color: #1976d2;
+}
+.delete-btn:hover {
+  opacity: 1;
+  color: #d32f2f;
+}
 .diagnosis-preview {
   font-weight: 500;
   font-size: 0.9rem;

@@ -46,6 +46,7 @@
       <div *cdkVirtualFor="let card of cards;">
         <app-medical-card
           [card]="card"
+          [patientId]="patientId"
           (edit)="onEditCard($event)"
           (delete)="onDeleteCard($event)"
         ></app-medical-card>
