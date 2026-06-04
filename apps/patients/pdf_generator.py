@@ -17,7 +17,7 @@ from reportlab.platypus import (
 )
 
 # ── Регистрация шрифтов с поддержкой кириллицы ───────────────────────────────
-BASE_DIR = pathlib.Path(__file__).parent
+BASE_DIR = pathlib.Path(__file__).parent.parent.parent
 # Формируем полные пути к файлам шрифтов
 FONT_REGULAR = str(BASE_DIR / 'fonts' / 'DejaVuSans.ttf')
 FONT_BOLD = str(BASE_DIR / 'fonts' / 'DejaVuSans-Bold.ttf')
