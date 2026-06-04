@@ -118,7 +118,7 @@
               <!-- Dropdown локализации (мульти) -->
               <div class="custom-dropdown" [class.open]="dropdownOpenIndex === i">
                 <div class="dropdown-trigger" (click)="toggleDropdown(i, $event)">
-                  <span class="selected-values">{{ getLocalizationDisplay(i) || 'Локализация' }}</span>
+                  <span class="selected-values" [title]="getLocalizationDisplay(i)">{{ getLocalizationDisplay(i) || 'Локализация' }}</span>
                   <span class="dropdown-arrow">▼</span>
                 </div>
                 <div class="dropdown-panel" *ngIf="dropdownOpenIndex === i">
@@ -136,7 +136,7 @@
               <!-- Dropdown стороны (мульти) -->
               <div class="custom-dropdown" [class.open]="sideDropdownOpenIndex === i">
                 <div class="dropdown-trigger" (click)="toggleSideDropdown(i, $event)">
-                  <span class="selected-values">{{ getSideDisplay(i) || 'Типы дефектов твёрдых тканей (OID+)' }}</span>
+                  <span class="selected-values" [title]="getSideDisplay(i)">{{ getSideDisplay(i) || 'Типы дефектов твёрдых тканей (OID+)' }}</span>
                   <span class="dropdown-arrow">▼</span>
                 </div>
                 <div class="dropdown-panel" *ngIf="sideDropdownOpenIndex === i">

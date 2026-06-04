@@ -1,4 +1,6 @@
-import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
+// src/app/patients/components/medical-card-form/medical-card-form.component.ts
+
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -104,6 +106,7 @@ export class MedicalCardFormComponent implements OnInit {
     });
   }
 
+  // Создание группы зуба для осмотра (OS)
   createToothGroup(toothNumber: number, existingData?: any): FormGroup {
     return this.fb.group({
       tooth_number: [toothNumber],
@@ -156,7 +159,7 @@ export class MedicalCardFormComponent implements OnInit {
     this.syncOsWithOidPlus();
   }
 
-  // ========== Локализация (мультиселект) ==========
+  // ========== Локализация (мультиселект, разделитель ;) ==========
   toggleDropdown(index: number, event: Event): void {
     event.stopPropagation();
     if (this.dropdownOpenIndex === index) {
@@ -170,20 +173,20 @@ export class MedicalCardFormComponent implements OnInit {
   getLocalizationDisplay(toothIndex: number): string {
     const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
     const value = group.get('localization')?.value || '';
-    return value ? value.split(',').join(', ') : '';
+    return value ? value.split(';').join(', ') : '';
   }
 
   isLocalizationSelected(toothIndex: number, option: string): boolean {
     const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
     const value = group.get('localization')?.value || '';
-    return value.split(',').includes(option);
+    return value.split(';').includes(option);
   }
 
   toggleLocalizationOption(toothIndex: number, option: string, event: Event): void {
     event.stopPropagation();
     const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
     let current = group.get('localization')?.value || '';
-    let selected: string[] = current ? current.split(',') : [];
+    let selected: string[] = current ? current.split(';') : [];
 
     if (selected.includes(option)) {
       selected = selected.filter((x: string) => x !== option);
@@ -191,10 +194,10 @@ export class MedicalCardFormComponent implements OnInit {
       selected.push(option);
     }
 
-    group.get('localization')?.setValue(selected.join(','));
+    group.get('localization')?.setValue(selected.join(';'));
   }
 
-  // ========== Сторона зуба (мультиселект) ==========
+  // ========== Сторона зуба (мультиселект, разделитель ;) ==========
   toggleSideDropdown(index: number, event: Event): void {
     event.stopPropagation();
     if (this.sideDropdownOpenIndex === index) {
@@ -208,20 +211,20 @@ export class MedicalCardFormComponent implements OnInit {
   getSideDisplay(toothIndex: number): string {
     const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
     const value = group.get('side')?.value || '';
-    return value ? value.split(',').join(', ') : '';
+    return value ? value.split(';').join(', ') : '';
   }
 
   isSideSelected(toothIndex: number, option: string): boolean {
     const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
     const value = group.get('side')?.value || '';
-    return value.split(',').includes(option);
+    return value.split(';').includes(option);
   }
 
   toggleSideOption(toothIndex: number, option: string, event: Event): void {
     event.stopPropagation();
     const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
     let current = group.get('side')?.value || '';
-    let selected: string[] = current ? current.split(',') : [];
+    let selected: string[] = current ? current.split(';') : [];
 
     if (selected.includes(option)) {
       selected = selected.filter((x: string) => x !== option);
@@ -229,7 +232,7 @@ export class MedicalCardFormComponent implements OnInit {
       selected.push(option);
     }
 
-    group.get('side')?.setValue(selected.join(','));
+    group.get('side')?.setValue(selected.join(';'));
   }
 
   closeAllDropdowns(): void {
@@ -266,11 +269,19 @@ export class MedicalCardFormComponent implements OnInit {
         const oidPlusArray = this.oidPlusTeethArray;
         oidPlusArray.clear();
         card.objective.oid_plus_teeth.forEach((t: any) => {
-          oidPlusArray.push(this.fb.group({
+          const localizationValue = t.localization ? t.localization.replace(/,/g, ';') : '';
+          const sideValue = t.side ? t.side.replace(/,/g, ';') : '';
+          const group = this.fb.group({
             tooth_number: [t.tooth_number],
-            localization: [t.localization || ''],
-            side: [t.side || '']
-          }));
+            localization: [localizationValue],
+            side: [sideValue]
+          });
+          // Подписываемся на изменение номера зуба
+          const toothNumberControl = group.get('tooth_number');
+          toothNumberControl?.valueChanges.subscribe(() => {
+            this.syncOsWithOidPlus();
+          });
+          oidPlusArray.push(group);
         });
 
         const savedOsMap = new Map<number, any>();
@@ -311,7 +322,11 @@ export class MedicalCardFormComponent implements OnInit {
       objective: {
         or: formValue.objective.or,
         oid_plus: formValue.objective.oid_plus,
-        oid_plus_teeth: formValue.objective.oid_plus_teeth,
+        oid_plus_teeth: formValue.objective.oid_plus_teeth.map((tooth: any) => ({
+          ...tooth,
+          localization: tooth.localization ? tooth.localization.replace(/;/g, ',') : '',
+          side: tooth.side ? tooth.side.replace(/;/g, ',') : ''
+        })),
         oid_minus: formValue.objective.oid_minus,
         os: formValue.objective.os
       }
