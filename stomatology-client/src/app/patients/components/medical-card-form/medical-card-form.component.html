@@ -1,0 +1,170 @@
+<!-- src/app/patients/components/medical-card-form/medical-card-form.component.html -->
+
+<div class="card-form-container">
+  <div class="form-header">
+    <h3>{{ cardId ? 'Редактирование карты осмотра' : 'Новая карта осмотра' }}</h3>
+  </div>
+  <div class="form-body">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <!-- Обязательные поля -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Дата осмотра *</label>
+          <input type="date" formControlName="visit_date" required>
+        </div>
+        <div class="form-group">
+          <label>Количество зубов у пациента (для статистики)</label>
+          <input type="number" formControlName="tooth_count" min="1" max="32">
+        </div>
+      </div>
+
+      <!-- ========== Субъективные жалобы (S) ========== -->
+      <fieldset formGroupName="subjective">
+        <legend>Субъективные жалобы (S)</legend>
+
+        <!-- Раздражители (SC) -->
+        <div class="form-group">
+          <label>Раздражители (SC):</label>
+          <div formGroupName="sc" class="checkbox-group">
+            <label><input type="checkbox" formControlName="sc01"> Воздух</label>
+            <label><input type="checkbox" formControlName="sc02"> Температурные</label>
+            <label><input type="checkbox" formControlName="sc03"> Осмотические</label>
+            <label><input type="checkbox" formControlName="sc04"> Тактильные/механические</label>
+          </div>
+        </div>
+
+        <!-- NRS шкала -->
+        <div class="form-group">
+          <label>Оценка боли по шкале NRS (0-10)</label>
+          <input type="range" formControlName="scale_nrs" min="0" max="10" step="1">
+          <span>{{ form.get('subjective.scale_nrs')?.value }}</span>
+        </div>
+
+        <!-- SA – анамнез -->
+        <div formGroupName="sa">
+          <div class="form-group">
+            <label>Этиологические факторы (SAD):</label>
+            <div formGroupName="sad" class="checkbox-group">
+              <label><input type="checkbox" formControlName="sad01"> Травма (откол, трещина)</label>
+              <label><input type="checkbox" formControlName="sad02"> Повышенная стираемость</label>
+              <label><input type="checkbox" formControlName="sad03"> Заболевания пародонта</label>
+              <label><input type="checkbox" formControlName="sad04"> Гипоплазия эмали / дисплазия</label>
+              <label><input type="checkbox" formControlName="sad05"> Отсутствие цемента</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Профессиональные вредности (SAP):</label>
+            <div formGroupName="sap" class="checkbox-group">
+              <label><input type="checkbox" formControlName="sap01"> Кислоты</label>
+              <label><input type="checkbox" formControlName="sap02"> Абразивы</label>
+              <label><input type="checkbox" formControlName="sap03"> Профессиональная травма</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Сопутствующие заболевания (SAR)</label>
+            <textarea formControlName="sar" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Особенности питания (SAN)</label>
+            <textarea formControlName="san" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Психологические особенности (SAM)</label>
+            <textarea formControlName="sam" rows="2"></textarea>
+          </div>
+        </div> <!-- end sa -->
+      </fieldset>
+
+      <!-- ========== Объективные данные (O) ========== -->
+      <fieldset formGroupName="objective">
+        <legend>Объективные данные (O)</legend>
+
+        <!-- Факторы риска (OR) -->
+        <div class="form-group">
+          <label>Факторы риска (OR):</label>
+          <div formGroupName="or" class="checkbox-group">
+            <label><input type="checkbox" formControlName="orb"> Тонкий биотип</label>
+            <label><input type="checkbox" formControlName="oro"> Функциональная перегрузка</label>
+            <label><input type="checkbox" formControlName="orh"> Нерациональная гигиена</label>
+          </div>
+        </div>
+
+        <!-- Типы дефектов твёрдых тканей (OID+) -->
+        <div class="form-group">
+          <label>Типы дефектов твёрдых тканей (OID+):</label>
+          <div formGroupName="oid_plus" class="checkbox-group">
+            <label><input type="checkbox" formControlName="oid_plus1"> Эрозия</label>
+            <label><input type="checkbox" formControlName="oid_plus2"> Клиновидный дефект</label>
+            <label><input type="checkbox" formControlName="oid_plus3"> Повышенная стираемость</label>
+            <label><input type="checkbox" formControlName="oid_plus4"> Гипоплазия эмали</label>
+            <label><input type="checkbox" formControlName="oid_plus5"> Некроз эмали</label>
+            <label><input type="checkbox" formControlName="oid_plus6"> Травматическое повреждение</label>
+            <label><input type="checkbox" formControlName="oid_plus7"> Препарирован под реставрацию</label>
+          </div>
+        </div>
+
+        <!-- Зубы с дефектами (oid_plus_teeth) -->
+        <div class="form-group">
+          <label>Зубы с дефектами (OID+ зубы)</label>
+          <button type="button" class="btn-secondary" (click)="addOidPlusTooth()">+ Добавить зуб</button>
+          <div formArrayName="oid_plus_teeth" class="teeth-list">
+            <div *ngFor="let item of oidPlusTeethArray.controls; let i = index" [formGroupName]="i" class="tooth-item">
+              <input formControlName="tooth_number" placeholder="Номер зуба" type="number">
+              <select formControlName="localization">
+                <option value="вестибулярная">вестибулярная</option>
+                <option value="оральная">оральная</option>
+                <option value="окклюзионная">окклюзионная</option>
+                <option value="апроксимальная">апроксимальная медиальная</option>
+                <option value="апроксимальная">апроксимальная дистальняя</option>
+              </select>
+              <button type="button" (click)="removeOidPlusTooth(i)">×</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Факторы без потери ткани (OID-) -->
+        <div class="form-group">
+          <label>Факторы без потери ткани (OID-):</label>
+          <div formGroupName="oid_minus" class="checkbox-group">
+            <label><input type="checkbox" formControlName="oid_minus_b"> Обнажение шейки зуба</label>
+            <label><input type="checkbox" formControlName="oid_minus_n"> Отбеливание зубов</label>
+            <label><input type="checkbox" formControlName="oid_minus_s"> Системная гиперестезия</label>
+          </div>
+        </div>
+
+        <!-- Осмотр зубов (OS) – только зубы, добавленные в OID+ -->
+        <div class="form-group" *ngIf="teethArray.controls.length > 0">
+          <label>Осмотр зубов (OS)</label>
+          <div formArrayName="os" class="teeth-grid">
+            <div *ngFor="let tooth of teethArray.controls; let i = index" [formGroupName]="i" class="tooth-card">
+              <div class="tooth-number">{{ tooth.get('tooth_number')?.value }}</div>
+              <label><input type="checkbox" formControlName="heat"> Тепло</label>
+              <label><input type="checkbox" formControlName="cold"> Холод</label>
+              <label><input type="checkbox" formControlName="air"> Воздух</label>
+              <label><input type="checkbox" formControlName="probe"> Зондирование</label>
+              <label><input type="checkbox" formControlName="osmosis"> Осмос</label>
+              <label>ЭОД (мкА): <input type="number" formControlName="eod" step="0.1"></label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group" *ngIf="teethArray.controls.length === 0">
+          <p class="info-message">Нет зубов для осмотра. Добавьте зубы в список «Зубы с дефектами».</p>
+        </div>
+      </fieldset>
+
+      <!-- Заключение врача -->
+      <div class="form-group">
+        <label>Заключение врача (диагноз)</label>
+        <textarea formControlName="diagnosis_text" rows="4" placeholder="Введите заключение..."></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="cancel()">Отмена</button>
+        <button type="submit" class="btn-primary" [disabled]="form.invalid || loading">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>

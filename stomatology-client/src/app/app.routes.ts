@@ -17,5 +17,13 @@ export const routes: Routes = [
       { path: '', redirectTo: 'patients', pathMatch: 'full' }
     ]
   },
+  {
+    path: 'patients/:patientId/cards/new',
+    loadComponent: () => import('./patients/components/medical-card-form/medical-card-form.component').then(m => m.MedicalCardFormComponent),
+  },
+  {
+    path: 'patients/:patientId/cards/:cardId/edit',
+    loadComponent: () => import('./patients/components/medical-card-form/medical-card-form.component').then(m => m.MedicalCardFormComponent),
+  },
   { path: '**', redirectTo: '' }
 ];
