@@ -4,6 +4,7 @@
 """
 import io
 from datetime import datetime
+import pathlib
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -16,17 +17,19 @@ from reportlab.platypus import (
 )
 
 # ── Регистрация шрифтов с поддержкой кириллицы ───────────────────────────────
-FONT_REGULAR = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
-FONT_BOLD = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
+BASE_DIR = pathlib.Path(__file__).parent
+FONT_REGULAR = str(BASE_DIR / 'fonts' / 'DejaVuSans.ttf')
+FONT_BOLD = str(BASE_DIR / 'fonts' / 'DejaVuSans-Bold.ttf')
 
 try:
-    pdfmetrics.registerFont(TTFont('DejaVu', FONT_REGULAR))
-    pdfmetrics.registerFont(TTFont('DejaVu-Bold', FONT_BOLD))
+    pdfmetrics.registerFont(TTFont('DejaVu', FONT_REGULAR, 'UTF-8'))
+    pdfmetrics.registerFont(TTFont('DejaVu-Bold', FONT_BOLD, 'UTF-8'))
     FONT = 'DejaVu'
     FONT_B = 'DejaVu-Bold'
 except Exception:
     FONT = 'Helvetica'
     FONT_B = 'Helvetica-Bold'
+
 
 # ── Цвета ─────────────────────────────────────────────────────────────────────
 COLOR_PRIMARY = colors.HexColor('#1a5276')     # тёмно-синий (заголовки)
