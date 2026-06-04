@@ -1,12 +1,9 @@
-// src/app/patients/components/medical-card-form/medical-card-form.component.ts
-
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MedicalCardsService } from '../../services/medical-card.service';
 import { UiStateService } from '../../../services/ui-state.service';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-medical-card-form',
@@ -25,6 +22,29 @@ export class MedicalCardFormComponent implements OnInit {
   patientId!: number;
   cardId: number | null = null;
   loading = false;
+
+  localizationOptions: string[] = [
+    'вестибулярная',
+    'оральная',
+    'окклюзионная',
+    'апроксимальная медиальная',
+    'апроксимальная дистальная',
+    'корень зуба'
+  ];
+
+  sideOptions: string[] = [
+    'рецессия десны',
+    'повышенная стираемость твердых тканей зубов',
+    'эрозии эмали',
+    'клиновидные дефекты',
+    'флюороз и процедуры отбеливания зубов',
+    'травма твердых тканей зубов, незавершенный амелогенез',
+    'гипоплазия эмали зубов',
+    'некроз эмали'
+  ];
+
+  dropdownOpenIndex: number | null = null;
+  sideDropdownOpenIndex: number | null = null;
 
   get teethArray(): FormArray {
     return this.form.get('objective.os') as FormArray;
@@ -84,7 +104,6 @@ export class MedicalCardFormComponent implements OnInit {
     });
   }
 
-  // Создание группы зуба с пустыми значениями (для OS)
   createToothGroup(toothNumber: number, existingData?: any): FormGroup {
     return this.fb.group({
       tooth_number: [toothNumber],
@@ -97,30 +116,20 @@ export class MedicalCardFormComponent implements OnInit {
     });
   }
 
-  // Синхронизация массива OS на основе текущих OID+ зубов
   private syncOsWithOidPlus(): void {
-    // Получаем уникальные номера зубов из oid_plus_teeth (игнорируем null и дубликаты)
     const toothNumbers = new Set<number>();
     for (const control of this.oidPlusTeethArray.controls) {
       const num = control.get('tooth_number')?.value;
-      if (num && !toothNumbers.has(num)) {
-        toothNumbers.add(num);
-      }
+      if (num && !toothNumbers.has(num)) toothNumbers.add(num);
     }
 
-    // Создаём карту существующих зубов в OS (по номеру) для сохранения данных
     const existingOsMap = new Map<number, any>();
     for (const control of this.teethArray.controls) {
       const num = control.get('tooth_number')?.value;
-      if (num) {
-        existingOsMap.set(num, control.value);
-      }
+      if (num) existingOsMap.set(num, control.value);
     }
 
-    // Очищаем текущий массив OS
     this.teethArray.clear();
-
-    // Добавляем зубы в OS в порядке возрастания номеров
     const sortedNumbers = Array.from(toothNumbers).sort((a, b) => a - b);
     for (const num of sortedNumbers) {
       const existing = existingOsMap.get(num);
@@ -128,34 +137,120 @@ export class MedicalCardFormComponent implements OnInit {
     }
   }
 
-  // Добавление нового зуба в OID+
   addOidPlusTooth(): void {
     const newGroup = this.fb.group({
       tooth_number: [null],
-      localization: ['вестибулярная']
+      localization: [''],
+      side: ['']
     });
     this.oidPlusTeethArray.push(newGroup);
-    // Подписываемся на изменение номера зуба, чтобы синхронизировать OS
     const toothNumberControl = newGroup.get('tooth_number');
     toothNumberControl?.valueChanges.subscribe(() => {
       this.syncOsWithOidPlus();
     });
-    // Также синхронизируем сразу, если номер уже заполнен (но обычно пустой)
     this.syncOsWithOidPlus();
   }
 
-  // Удаление зуба из OID+ и синхронизация OS
   removeOidPlusTooth(index: number): void {
     this.oidPlusTeethArray.removeAt(index);
     this.syncOsWithOidPlus();
   }
 
-  // Загрузка существующей карты
+  // ========== Локализация (мультиселект) ==========
+  toggleDropdown(index: number, event: Event): void {
+    event.stopPropagation();
+    if (this.dropdownOpenIndex === index) {
+      this.dropdownOpenIndex = null;
+    } else {
+      this.closeAllDropdowns();
+      this.dropdownOpenIndex = index;
+    }
+  }
+
+  getLocalizationDisplay(toothIndex: number): string {
+    const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
+    const value = group.get('localization')?.value || '';
+    return value ? value.split(',').join(', ') : '';
+  }
+
+  isLocalizationSelected(toothIndex: number, option: string): boolean {
+    const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
+    const value = group.get('localization')?.value || '';
+    return value.split(',').includes(option);
+  }
+
+  toggleLocalizationOption(toothIndex: number, option: string, event: Event): void {
+    event.stopPropagation();
+    const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
+    let current = group.get('localization')?.value || '';
+    let selected: string[] = current ? current.split(',') : [];
+
+    if (selected.includes(option)) {
+      selected = selected.filter((x: string) => x !== option);
+    } else {
+      selected.push(option);
+    }
+
+    group.get('localization')?.setValue(selected.join(','));
+  }
+
+  // ========== Сторона зуба (мультиселект) ==========
+  toggleSideDropdown(index: number, event: Event): void {
+    event.stopPropagation();
+    if (this.sideDropdownOpenIndex === index) {
+      this.sideDropdownOpenIndex = null;
+    } else {
+      this.closeAllDropdowns();
+      this.sideDropdownOpenIndex = index;
+    }
+  }
+
+  getSideDisplay(toothIndex: number): string {
+    const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
+    const value = group.get('side')?.value || '';
+    return value ? value.split(',').join(', ') : '';
+  }
+
+  isSideSelected(toothIndex: number, option: string): boolean {
+    const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
+    const value = group.get('side')?.value || '';
+    return value.split(',').includes(option);
+  }
+
+  toggleSideOption(toothIndex: number, option: string, event: Event): void {
+    event.stopPropagation();
+    const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
+    let current = group.get('side')?.value || '';
+    let selected: string[] = current ? current.split(',') : [];
+
+    if (selected.includes(option)) {
+      selected = selected.filter((x: string) => x !== option);
+    } else {
+      selected.push(option);
+    }
+
+    group.get('side')?.setValue(selected.join(','));
+  }
+
+  closeAllDropdowns(): void {
+    this.dropdownOpenIndex = null;
+    this.sideDropdownOpenIndex = null;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    const isInsideDropdown = target.closest('.custom-dropdown');
+    if (!isInsideDropdown) {
+      this.closeAllDropdowns();
+    }
+  }
+
+  // ========== Загрузка и сохранение ==========
   loadCard(): void {
     this.loading = true;
     this.cardsService.getCard(this.patientId, this.cardId!).subscribe({
       next: (card) => {
-        // Заполняем основные поля
         this.form.patchValue({
           visit_date: card.visit_date,
           tooth_count: card.tooth_count,
@@ -168,22 +263,21 @@ export class MedicalCardFormComponent implements OnInit {
           }
         });
 
-        // Заполняем OID+ зубы
         const oidPlusArray = this.oidPlusTeethArray;
         oidPlusArray.clear();
-        card.objective.oid_plus_teeth.forEach(t => oidPlusArray.push(this.fb.group(t)));
-
-        // Восстанавливаем OS: сохраняем данные стимулов/EOD для зубов, которые есть в OID+
-        // Сначала создаём мапу существующих данных из сохранённой карты
-        const savedOsMap = new Map<number, any>();
-        card.objective.os.forEach(osTooth => {
-          savedOsMap.set(osTooth.tooth_number, osTooth);
+        card.objective.oid_plus_teeth.forEach((t: any) => {
+          oidPlusArray.push(this.fb.group({
+            tooth_number: [t.tooth_number],
+            localization: [t.localization || ''],
+            side: [t.side || '']
+          }));
         });
 
-        // Очищаем текущий OS массив
+        const savedOsMap = new Map<number, any>();
+        card.objective.os.forEach((osTooth: any) => {
+          savedOsMap.set(osTooth.tooth_number, osTooth);
+        });
         this.teethArray.clear();
-
-        // Добавляем зубы из OID+ (уникальные номера) с данными из savedOsMap, если есть
         const toothNumbers = new Set<number>();
         for (const control of oidPlusArray.controls) {
           const num = control.get('tooth_number')?.value;
