@@ -45,6 +45,8 @@
       (scrolledIndexChange)="onScrollIndexChange($event)">
       <div *cdkVirtualFor="let card of cards;">
         <app-medical-card
+          *ngIf="patient"
+          [patientDetail]="patient"
           [card]="card"
           [patientId]="patientId"
           (edit)="onEditCard($event)"

@@ -37,8 +37,15 @@
         <!-- NRS шкала -->
         <div class="form-group">
           <label>Оценка боли по шкале NRS (0-10)</label>
-          <input type="range" formControlName="scale_nrs" min="0" max="10" step="1">
-          <span>{{ form.get('subjective.scale_nrs')?.value }}</span>
+          <div class="range-wrapper">
+            <input type="range" 
+                  formControlName="scale_nrs" 
+                  min="0" 
+                  max="10" 
+                  step="1"
+                  [style.--fill-percent]="(form.get('subjective.scale_nrs')?.value || 0) / 10 * 100 + '%'">
+            <span>{{ form.get('subjective.scale_nrs')?.value }}</span>
+          </div>
         </div>
 
         <!-- SA – анамнез -->

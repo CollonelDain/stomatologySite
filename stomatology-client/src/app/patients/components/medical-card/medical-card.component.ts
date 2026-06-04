@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MedicalCard } from '../../../models';
+import { MedicalCard, PatientDetail } from '../../../models';
 import { MedicalCardsService } from '../../services/medical-card.service';
 
 @Component({
@@ -12,6 +12,7 @@ import { MedicalCardsService } from '../../services/medical-card.service';
 })
 export class MedicalCardComponent {
   @Input() card!: MedicalCard;
+  @Input() patientDetail: PatientDetail | null = null;
   @Input() patientId!: number;   // ID пациента, переданный из родителя
   @Output() edit = new EventEmitter<MedicalCard>();
   @Output() delete = new EventEmitter<MedicalCard>();
@@ -32,7 +33,7 @@ export class MedicalCardComponent {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `diagnosis_${this.card.visit_date}.pdf`;
+        a.download = `Диагноз_пациента_№${this.patientDetail?.patient_code}_от_${this.card.visit_date}.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);

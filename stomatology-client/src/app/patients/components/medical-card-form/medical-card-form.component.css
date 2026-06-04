@@ -1,5 +1,14 @@
 /* src/app/patients/components/medical-card-form/medical-card-form.component.css */
 
+/* Переменные для общей стилистики */
+:root {
+  --primary-color: #8fd3fe;
+  --primary-dark: #7bc2ed;
+  --track-bg: #e0e0e0;
+  --thumb-size: 20px;
+  --track-height: 8px;
+}
+
 /* Контейнер */
 .card-form-container {
   height: 100%;
@@ -7,7 +16,7 @@
   flex-direction: column;
 }
 
-/* Шапка (как в других формах) */
+/* Шапка */
 .form-header {
   background-color: #8fd3fe;
   padding: 0 24px;
@@ -34,7 +43,7 @@
 fieldset {
   border: 1px solid #e0e0e0;
   border-radius: 16px;
-  padding: 20px 20px 20px 20px;
+  padding: 20px;
   margin-bottom: 24px;
 }
 legend {
@@ -102,7 +111,7 @@ textarea {
   min-height: 80px;
 }
 
-/* Блок для зубов с дефектами (oid_plus_teeth) */
+/* Блок для зубов с дефектами */
 .teeth-list {
   margin: 12px 0;
 }
@@ -127,7 +136,7 @@ textarea {
   padding: 0 6px;
 }
 
-/* Сетка для осмотра зубов (OS) */
+/* Сетка для осмотра зубов */
 .teeth-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
@@ -208,6 +217,109 @@ textarea {
   transform: translateY(-1px);
 }
 
+/* ===== СТИЛИЗАЦИЯ ПОЛЗУНКА NRS (без огромного круга, с прогрессом) ===== */
+/* Обёртка для ползунка и значения */
+.range-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Сам ползунок – использует CSS-переменную --fill-percent из шаблона */
+.form-group input[type="range"] {
+  --track-height: 8px;
+  --thumb-size: 20px;
+  --primary: #8fd3fe;
+  --primary-dark: #7bc2ed;
+  --track-bg: #e0e0e0;
+
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: var(--track-height);
+  background: transparent;
+  margin: 10px 0;
+}
+
+/* --- WebKit (Chrome, Edge, Яндекс, Safari) --- */
+.form-group input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: var(--track-height);
+  background: linear-gradient(
+    to right,
+    var(--primary) 0%,
+    var(--primary) var(--fill-percent, 0%),
+    var(--track-bg) var(--fill-percent, 0%),
+    var(--track-bg) 100%
+  );
+  border-radius: calc(var(--track-height) / 2);
+}
+
+.form-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  background: var(--primary);
+  border-radius: 50%;
+  margin-top: calc((var(--track-height) - var(--thumb-size)) / 2);
+  cursor: pointer;
+  transition: transform 0.1s, background 0.2s;
+  box-shadow: none;
+}
+
+.form-group input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  background: var(--primary-dark);
+}
+
+/* --- Firefox --- */
+.form-group input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: var(--track-height);
+  background: var(--track-bg);
+  border-radius: calc(var(--track-height) / 2);
+}
+
+.form-group input[type="range"]::-moz-range-progress {
+  height: var(--track-height);
+  background: var(--primary);
+  border-radius: calc(var(--track-height) / 2);
+}
+
+.form-group input[type="range"]::-moz-range-thumb {
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  background: var(--primary);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.form-group input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  background: var(--primary-dark);
+}
+
+.form-group input[type="range"]:focus {
+  outline: none;
+}
+
+/* Отображаемое значение (спан) */
+.form-group span {
+  display: inline-block;
+  min-width: 35px;
+  text-align: center;
+  padding: 2px 8px;
+  background: #f5f5f5;
+  border-radius: 20px;
+  font-weight: 600;
+  color: var(--primary, #8fd3fe);
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
   .form-body {
@@ -231,6 +343,9 @@ textarea {
     text-align: center;
     padding: 10px 0;
   }
+  .range-wrapper {
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 480px) {
@@ -246,5 +361,10 @@ textarea {
   }
   .tooth-card {
     padding: 8px;
+  }
+  .form-group span {
+    margin-left: 0;
+    font-size: 0.8rem;
+    padding: 2px 6px;
   }
 }
