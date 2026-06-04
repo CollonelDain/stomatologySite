@@ -1,7 +1,10 @@
+<!-- src/app/patients/components/medical-card/medical-card.component.html -->
+
 <div class="medical-card">
   <div class="card-header">
     <span class="visit-date">{{ card.visit_date | date:'dd.MM.yyyy' }}</span>
     <div class="card-actions">
+      <button class="report-btn" (click)="downloadReport()" title="Скачать отчёт">📄</button>
       <button class="edit-btn" (click)="onEdit()" title="Редактировать">✏️</button>
       <button class="delete-btn" (click)="onDelete()" title="Удалить">🗑️</button>
     </div>
