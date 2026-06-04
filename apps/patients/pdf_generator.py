@@ -32,7 +32,7 @@ except Exception:
     FONT_B = 'Helvetica-Bold'
 
 # ── Цвета ─────────────────────────────────────────────────────────────────────
-COLOR_PRIMARY = colors.HexColor('#1a5276')     # тёмно-синий (заголовки)
+COLOR_PRIMARY = colors.HexColor("#2980b9")     # тёмно-синий (заголовки)
 COLOR_ACCENT = colors.HexColor('#2980b9')      # синий (секции)
 COLOR_LIGHT = colors.HexColor('#d6eaf8')       # светло-голубой (фон таблицы)
 COLOR_RED = colors.HexColor('#c0392b')         # красный (важные значения)
@@ -227,7 +227,7 @@ def _build_subjective(st, diag: dict) -> list:
 
     # Оборачиваем значения в Paragraph для переноса
     table_data = [[Paragraph(str(c), st['body']) for c in row] for row in rows]
-    t = Table(table_data, colWidths=[6*cm, 11*cm])
+    t = Table(table_data, colWidths=[6*cm, 11*cm], repeatRows=1)
     t.setStyle(_table_style(COLOR_ACCENT))
     story.append(t)
     return story
@@ -252,7 +252,7 @@ def _build_objective(st, diag: dict) -> list:
         rows.append(['Зубы с дефектами (Oic+)', teeth_str])
 
     table_data = [[Paragraph(str(c), st['body']) for c in row] for row in rows]
-    t = Table(table_data, colWidths=[6*cm, 11*cm])
+    t = Table(table_data, colWidths=[6*cm, 11*cm], repeatRows=1)
     t.setStyle(_table_style(COLOR_ACCENT))
     story.append(t)
     return story
@@ -285,7 +285,7 @@ def _build_teeth_table(st, diag: dict) -> list:
 
     col_w = [1.5*cm, 1.3*cm, 1.3*cm, 1.3*cm, 1.3*cm, 1.3*cm, 2.5*cm, 1.5*cm, 1.5*cm]
     table_data = [[Paragraph(str(c), st['body']) for c in row] for row in rows]
-    t = Table(table_data, colWidths=col_w)
+    t = Table(table_data, colWidths=col_w, repeatRows=1)
     ts = _table_style(COLOR_PRIMARY)
     # Выделяем чувствительные зубы
     for i, tooth in enumerate(teeth, start=1):
