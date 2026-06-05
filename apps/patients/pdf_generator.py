@@ -214,22 +214,30 @@ def _build_subjective(st, diag: dict) -> list:
     """Секция субъективных данных."""
     story = [Paragraph('Субъективные данные (S)', st['section'])]
 
+    # Короткие поля — в таблицу
     rows = [
         ['Параметр', 'Значение'],
         ['Жалобы (Sc)', _list_or_none(diag.get('complaints', []))],
         ['Уровень боли NRS (0–10)', str(diag.get('scale_nrs', 0))],
         ['Причины обнажения дентина (Sad)', _list_or_none(diag.get('dentin_exposure_causes', []))],
-        ['Сопутствующая патология (Sar)', diag.get('comorbidities', '') or 'Нет'],
-        ['Особенности питания (San)', diag.get('dietary_features', '') or 'Нет'],
-        ['Психологические особенности (Sam)', diag.get('psychological_features', '') or 'Нет'],
         ['Профессиональные вредности (Sap)', _list_or_none(diag.get('professional_hazards', []))],
     ]
-
-    # Оборачиваем значения в Paragraph для переноса
     table_data = [[Paragraph(str(c), st['body']) for c in row] for row in rows]
     t = Table(table_data, colWidths=[6*cm, 11*cm], repeatRows=1)
     t.setStyle(_table_style(COLOR_ACCENT))
     story.append(t)
+
+    # Длинные текстовые поля — отдельными параграфами вне таблицы
+    long_fields = [
+        ('Сопутствующая патология (Sar)', diag.get('comorbidities', '')),
+        ('Особенности питания (San)',      diag.get('dietary_features', '')),
+        ('Психологические особенности (Sam)', diag.get('psychological_features', '')),
+    ]
+    for label, value in long_fields:
+        story.append(Spacer(1, 0.2*cm))
+        story.append(Paragraph(label, st['label']))
+        story.append(Paragraph(value.strip() if value and value.strip() else 'Нет', st['body']))
+
     return story
 
 
@@ -245,21 +253,24 @@ def _build_objective(st, diag: dict) -> list:
 
     oid_teeth = diag.get('oid_plus_teeth', [])
     if oid_teeth:
+        from .diagnosis import DEFECT_TYPE_CATALOG
         for t in oid_teeth:
             codes = t.get('defect_types', [])
             letters = ', '.join(
-                f"{c}" for c in codes
+                DEFECT_TYPE_CATALOG[str(c)]['letter']
+                for c in codes
+                if str(c) in DEFECT_TYPE_CATALOG
             ) if codes else '—'
             loc = t.get('localization', '') or '—'
             rows.append([
                 f"Зуб {t['tooth_number']} — локализация / типы дефектов",
-                f"{loc} | коды: {letters}"
+                f"{loc} | {letters}"
             ])
     else:
         rows.append(['Зубы с дефектами (Oid+)', 'Не указаны'])
 
     table_data = [[Paragraph(str(c), st['body']) for c in row] for row in rows]
-    t = Table(table_data, colWidths=[6*cm, 11*cm], repeatRows=1)
+    t = Table(table_data, colWidths=[6*cm, 11*cm], repeatRows=1, splitByRow=1)
     t.setStyle(_table_style(COLOR_ACCENT))
     story.append(t)
     return story
