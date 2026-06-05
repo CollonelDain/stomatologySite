@@ -61,14 +61,29 @@ class ExaminationCard(models.Model):
     objective (O) - объективные данные:
     {
       "or": {"orb": false, "oro": false, "orh": false},
-      "oid_plus": {"oid_plus1": false, ..., "oid_plus7": false},
-      "oid_plus_teeth": [{"tooth_number": 11, "localization": "вестибулярная"}],
+      "oid_plus_teeth": [
+        {
+          "tooth_number": 11,
+          "localization": "вестибулярная,оральная",
+          "defect_types": ["1", "2"]
+        }
+      ],
       "oid_minus": {"oid_minus_n": false, "oid_minus_b": false, "oid_minus_s": false},
       "os": [
         {"tooth_number": 11, "eod": 6.0,
          "heat": false, "cold": false, "air": false, "probe": false, "osmosis": false}
       ]
     }
+
+    defect_types — список кодов дефектов твёрдых тканей для каждого зуба:
+      "1" — Рецессия десны (Р)
+      "2" — Повышенная стираемость (П)
+      "3" — Эрозия эмали (Э)
+      "4" — Клиновидный дефект (К)
+      "5" — Флюороз и процедуры отбеливания (Ф)
+      "6" — Травма / незавершённый амелогенез (Т)
+      "7" — Гипоплазия эмали (Г)
+      "8" — Некроз эмали (Н)
     """
     patient = models.ForeignKey(
         Patient,
@@ -133,11 +148,6 @@ class ExaminationCard(models.Model):
     def default_objective():
         return {
             "or": {"orb": False, "oro": False, "orh": False},
-            "oid_plus": {
-                "oid_plus1": False, "oid_plus2": False, "oid_plus3": False,
-                "oid_plus4": False, "oid_plus5": False, "oid_plus6": False,
-                "oid_plus7": False
-            },
             "oid_plus_teeth": [],
             "oid_minus": {
                 "oid_minus_n": False, "oid_minus_b": False, "oid_minus_s": False

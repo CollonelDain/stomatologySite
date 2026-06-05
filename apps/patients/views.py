@@ -41,23 +41,37 @@ def get_card_for_patient(card_pk: int, patient: Patient) -> ExaminationCard:
 
 def generate_diagnosis_text(diag: dict) -> str:
     parts = []
-    
+
     sensitive = diag['n_sensitive_teeth']
     if sensitive == 0:
-        return 'Гиперестезия дентина не выявлена.'
-    
-    teeth_list = ', '.join(
-        str(t['tooth_number']) 
-        for t in diag['teeth_details'] 
-        if t['is_sensitive']
-    )
-    parts.append(f"Гиперестезия дентина зубов {teeth_list}.")
-    parts.append(diag['fedorov_degree']['interpretation'] + '.')
-    parts.append(f"ИРГЗ: {diag['irgz']['value']}% — {diag['irgz']['interpretation']}.")
-    parts.append(f"ИИГЗ: {diag['iigz']['value']} балла — {diag['iigz']['interpretation']}.")
-    parts.append(diag['kidchz']['interpretation'] + '.')
-    
-    return ' '.join(parts)
+        primary = 'Гиперестезия дентина не выявлена.'
+    else:
+        teeth_list = ', '.join(
+            str(t['tooth_number'])
+            for t in diag['teeth_details']
+            if t['is_sensitive']
+        )
+        primary_parts = [
+            f"Гиперестезия дентина зубов {teeth_list}.",
+            diag['fedorov_degree']['interpretation'] + '.',
+            f"ИРГЗ: {diag['irgz']['value']}% — {diag['irgz']['interpretation']}.",
+            f"ИИГЗ: {diag['iigz']['value']} балла — {diag['iigz']['interpretation']}.",
+            diag['kidchz']['interpretation'] + '.',
+        ]
+        primary = ' '.join(primary_parts)
+
+    parts.append(primary)
+
+    # Дополнительные диагнозы по OID+
+    secondary = diag.get('secondary_diagnoses', [])
+    if secondary:
+        parts.append('\nДополнительные диагнозы:')
+        for sd in secondary:
+            teeth_str = ', '.join(str(t) for t in sd.get('teeth', []))
+            teeth_note = f' (зубы: {teeth_str})' if teeth_str else ''
+            parts.append(f"— {sd['diagnosis']}{teeth_note}.")
+
+    return '\n'.join(parts)
 
 # ── Пациенты ───────────────────────────────────────────────────────────────────
 

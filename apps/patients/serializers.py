@@ -50,18 +50,14 @@ def validate_subjective(value):
     return value
 
 
+VALID_DEFECT_TYPES = {'1', '2', '3', '4', '5', '6', '7', '8'}
+
+
 def validate_objective(value):
     if not isinstance(value, dict):
         raise serializers.ValidationError('objective должен быть объектом.')
     or_data = value.get('or', {})
     _validate_bool_keys(or_data, ['orb', 'oro', 'orh'], 'or')
-    oid_plus = value.get('oid_plus', {})
-    _validate_bool_keys(
-        oid_plus,
-        ['oid_plus1', 'oid_plus2', 'oid_plus3', 'oid_plus4',
-         'oid_plus5', 'oid_plus6', 'oid_plus7'],
-        'oid_plus'
-    )
     oid_minus = value.get('oid_minus', {})
     _validate_bool_keys(oid_minus, ['oid_minus_n', 'oid_minus_b', 'oid_minus_s'], 'oid_minus')
     oid_plus_teeth = value.get('oid_plus_teeth', [])
@@ -72,6 +68,17 @@ def validate_objective(value):
             raise serializers.ValidationError('Каждый элемент oid_plus_teeth должен быть объектом.')
         if 'tooth_number' not in item:
             raise serializers.ValidationError('Каждый зуб в oid_plus_teeth должен иметь tooth_number.')
+        defect_types = item.get('defect_types', [])
+        if not isinstance(defect_types, list):
+            raise serializers.ValidationError(
+                f'oid_plus_teeth[{item["tooth_number"]}].defect_types должен быть массивом.'
+            )
+        for dt in defect_types:
+            if str(dt) not in VALID_DEFECT_TYPES:
+                raise serializers.ValidationError(
+                    f'oid_plus_teeth[{item["tooth_number"]}].defect_types содержит '
+                    f'недопустимый код «{dt}». Допустимые значения: 1–8.'
+                )
     os_list = value.get('os', [])
     if not isinstance(os_list, list):
         raise serializers.ValidationError('os должен быть массивом.')

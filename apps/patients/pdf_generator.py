@@ -240,16 +240,23 @@ def _build_objective(st, diag: dict) -> list:
     rows = [
         ['Параметр', 'Значение'],
         ['Факторы риска (Or)', _list_or_none(diag.get('risk_factors', []))],
-        ['Виды убыли тканей (Oid+)', _list_or_none(diag.get('tissue_loss_types', []))],
         ['Факторы без убыли (Oid−)', _list_or_none(diag.get('no_loss_sensitivity_factors', []))],
     ]
 
     oid_teeth = diag.get('oid_plus_teeth', [])
     if oid_teeth:
-        teeth_str = '; '.join(
-            f"зуб {t['tooth_number']} ({t.get('localization', '')})" for t in oid_teeth
-        )
-        rows.append(['Зубы с дефектами (Oic+)', teeth_str])
+        for t in oid_teeth:
+            codes = t.get('defect_types', [])
+            letters = ', '.join(
+                f"{c}" for c in codes
+            ) if codes else '—'
+            loc = t.get('localization', '') or '—'
+            rows.append([
+                f"Зуб {t['tooth_number']} — локализация / типы дефектов",
+                f"{loc} | коды: {letters}"
+            ])
+    else:
+        rows.append(['Зубы с дефектами (Oid+)', 'Не указаны'])
 
     table_data = [[Paragraph(str(c), st['body']) for c in row] for row in rows]
     t = Table(table_data, colWidths=[6*cm, 11*cm], repeatRows=1)
@@ -297,6 +304,61 @@ def _build_teeth_table(st, diag: dict) -> list:
         '* Жёлтым выделены зубы с выявленной повышенной чувствительностью.',
         st['label']
     ))
+    return story
+
+
+def _build_secondary_diagnoses(st, diag: dict) -> list:
+    """
+    Секция дополнительных диагнозов по типам дефектов твёрдых тканей (OID+).
+    Каждый выявленный тип дефекта → отдельная строка с буквой-кодом,
+    классом, этиологией, локализацией и поражёнными зубами.
+    """
+    story = [Paragraph('Дополнительные диагнозы (по типам дефектов твёрдых тканей)', st['section'])]
+
+    secondary = diag.get('secondary_diagnoses', [])
+    if not secondary:
+        story.append(Paragraph(
+            'Дополнительные диагнозы на основании типов дефектов OID+ не выявлены.',
+            st['body']
+        ))
+        return story
+
+    header = ['Код', 'Класс', 'Диагноз', 'Зубы']
+    rows = [header]
+    for sd in secondary:
+        teeth_str = ', '.join(str(t) for t in sd.get('teeth', [])) or '—'
+        rows.append([
+            sd.get('letter', ''),
+            sd.get('class_name', ''),
+            sd.get('diagnosis', ''),
+            teeth_str,
+        ])
+
+    col_w = [1.2*cm, 5*cm, 7*cm, 3.8*cm]
+    table_data = [[Paragraph(str(c), st['body']) for c in row] for row in rows]
+    t = Table(table_data, colWidths=col_w, repeatRows=1)
+    t.setStyle(_table_style(COLOR_PRIMARY))
+    story.append(t)
+
+    # Детализация с этиологией и локализацией
+    story.append(Spacer(1, 0.2*cm))
+    story.append(Paragraph('Детализация по классам дефектов:', st['label']))
+    for sd in secondary:
+        teeth_str = ', '.join(str(t) for t in sd.get('teeth', [])) or '—'
+        story.append(Paragraph(
+            f"<b>{sd['letter']} — {sd['class_name']}</b> (зубы: {teeth_str})",
+            st['body_bold']
+        ))
+        story.append(Paragraph(
+            f"Этиология: {sd.get('etiology', '—')}",
+            st['body']
+        ))
+        story.append(Paragraph(
+            f"Типичная локализация: {sd.get('localization', '—')}",
+            st['body']
+        ))
+        story.append(Spacer(1, 0.15*cm))
+
     return story
 
 
@@ -360,6 +422,8 @@ def generate_diagnosis_pdf(diag: dict) -> bytes:
     story += _build_subjective(st, diag)
     story.append(Spacer(1, 0.3*cm))
     story += _build_objective(st, diag)
+    story.append(Spacer(1, 0.3*cm))
+    story += _build_secondary_diagnoses(st, diag)
     story.append(Spacer(1, 0.3*cm))
     story += _build_teeth_table(st, diag)
     story += _build_conclusion(st, diag)
