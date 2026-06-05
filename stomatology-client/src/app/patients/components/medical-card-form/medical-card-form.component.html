@@ -1,5 +1,3 @@
-<!-- src/app/patients/components/medical-card-form/medical-card-form.component.html -->
-
 <div class="card-form-container">
   <div class="form-header">
     <h3>{{ cardId ? 'Редактирование карты осмотра' : 'Новая карта осмотра' }}</h3>
@@ -84,6 +82,7 @@
       <fieldset formGroupName="objective">
         <legend>Объективные данные (O)</legend>
 
+        <!-- Факторы риска (OR) -->
         <div class="form-group">
           <label>Факторы риска (OR):</label>
           <div formGroupName="or" class="checkbox-group">
@@ -93,20 +92,7 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Типы дефектов твёрдых тканей (OID+):</label>
-          <div formGroupName="oid_plus" class="checkbox-group">
-            <label><input type="checkbox" formControlName="oid_plus1"> Эрозия</label>
-            <label><input type="checkbox" formControlName="oid_plus2"> Клиновидный дефект</label>
-            <label><input type="checkbox" formControlName="oid_plus3"> Повышенная стираемость</label>
-            <label><input type="checkbox" formControlName="oid_plus4"> Гипоплазия эмали</label>
-            <label><input type="checkbox" formControlName="oid_plus5"> Некроз эмали</label>
-            <label><input type="checkbox" formControlName="oid_plus6"> Травматическое повреждение</label>
-            <label><input type="checkbox" formControlName="oid_plus7"> Препарирован под реставрацию</label>
-          </div>
-        </div>
-
-        <!-- Зубы с дефектами (oid_plus_teeth) – два мультиселекта -->
+        <!-- Блок зубов с дефектами (oid_plus_teeth) – два мультиселекта -->
         <div class="form-group">
           <label>Зубы с дефектами (OID+ зубы)</label>
           <button type="button" class="btn-secondary" (click)="addOidPlusTooth()">+ Добавить зуб</button>
@@ -133,19 +119,19 @@
                 </div>
               </div>
 
-              <!-- Dropdown стороны (мульти) -->
-              <div class="custom-dropdown" [class.open]="sideDropdownOpenIndex === i">
-                <div class="dropdown-trigger" (click)="toggleSideDropdown(i, $event)">
-                  <span class="selected-values" [title]="getSideDisplay(i)">{{ getSideDisplay(i) || 'Типы дефектов твёрдых тканей (OID+)' }}</span>
+              <!-- Dropdown типов дефектов (мульти, defect_types) -->
+              <div class="custom-dropdown" [class.open]="defectDropdownOpenIndex === i">
+                <div class="dropdown-trigger" (click)="toggleDefectDropdown(i, $event)">
+                  <span class="selected-values" [title]="getDefectTypesDisplay(i)">{{ getDefectTypesDisplay(i) || 'Типы дефектов' }}</span>
                   <span class="dropdown-arrow">▼</span>
                 </div>
-                <div class="dropdown-panel" *ngIf="sideDropdownOpenIndex === i">
+                <div class="dropdown-panel" *ngIf="defectDropdownOpenIndex === i">
                   <div class="dropdown-options">
-                    <div *ngFor="let side of sideOptions" 
+                    <div *ngFor="let opt of defectTypeOptions" 
                          class="dropdown-option"
-                         [class.selected]="isSideSelected(i, side)"
-                         (click)="toggleSideOption(i, side, $event)">
-                      {{ side }}
+                         [class.selected]="isDefectTypeSelected(i, opt.id)"
+                         (click)="toggleDefectType(i, opt.id, $event)">
+                      {{ opt.name }}
                     </div>
                   </div>
                 </div>
@@ -156,6 +142,7 @@
           </div>
         </div>
 
+        <!-- Факторы без потери ткани (OID-) -->
         <div class="form-group">
           <label>Факторы без потери ткани (OID-):</label>
           <div formGroupName="oid_minus" class="checkbox-group">
@@ -185,6 +172,7 @@
         </div>
       </fieldset>
 
+      <!-- Заключение врача -->
       <div class="form-group">
         <label>Заключение врача (диагноз)/ комментарии</label>
         <textarea formControlName="diagnosis_text" rows="4" placeholder="Введите заключение..."></textarea>

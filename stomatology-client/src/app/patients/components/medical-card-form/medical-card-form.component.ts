@@ -7,6 +7,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MedicalCardsService } from '../../services/medical-card.service';
 import { UiStateService } from '../../../services/ui-state.service';
 
+interface DefectTypeOption {
+  id: string;
+  name: string;
+}
+
 @Component({
   selector: 'app-medical-card-form',
   standalone: true,
@@ -25,6 +30,7 @@ export class MedicalCardFormComponent implements OnInit {
   cardId: number | null = null;
   loading = false;
 
+  // Варианты локализации (первый мультиселект)
   localizationOptions: string[] = [
     'вестибулярная',
     'оральная',
@@ -34,19 +40,21 @@ export class MedicalCardFormComponent implements OnInit {
     'корень зуба'
   ];
 
-  sideOptions: string[] = [
-    'рецессия десны',
-    'повышенная стираемость твердых тканей зубов',
-    'эрозии эмали',
-    'клиновидные дефекты',
-    'флюороз и процедуры отбеливания зубов',
-    'травма твердых тканей зубов, незавершенный амелогенез',
-    'гипоплазия эмали зубов',
-    'некроз эмали'
+  // Варианты типов дефектов (второй мультиселект) – id и отображаемое имя
+  defectTypeOptions: DefectTypeOption[] = [
+    { id: '1', name: 'рецессия десны' },
+    { id: '2', name: 'повышенная стираемость твердых тканей зубов' },
+    { id: '3', name: 'эрозии эмали' },
+    { id: '4', name: 'клиновидные дефекты' },
+    { id: '5', name: 'флюороз и процедуры отбеливания зубов' },
+    { id: '6', name: 'травма твердых тканей зубов/ незавершенный амелогенез' },
+    { id: '7', name: 'гипоплазия эмали зубов' },
+    { id: '8', name: 'некроз эмали' }
   ];
 
+  // Индексы открытых dropdown
   dropdownOpenIndex: number | null = null;
-  sideDropdownOpenIndex: number | null = null;
+  defectDropdownOpenIndex: number | null = null;
 
   get teethArray(): FormArray {
     return this.form.get('objective.os') as FormArray;
@@ -81,10 +89,6 @@ export class MedicalCardFormComponent implements OnInit {
       or: this.fb.group({
         orb: [false], oro: [false], orh: [false]
       }),
-      oid_plus: this.fb.group({
-        oid_plus1: [false], oid_plus2: [false], oid_plus3: [false],
-        oid_plus4: [false], oid_plus5: [false], oid_plus6: [false], oid_plus7: [false]
-      }),
       oid_plus_teeth: this.fb.array([]),
       oid_minus: this.fb.group({
         oid_minus_n: [false], oid_minus_b: [false], oid_minus_s: [false]
@@ -106,7 +110,7 @@ export class MedicalCardFormComponent implements OnInit {
     });
   }
 
-  // Создание группы зуба для осмотра (OS)
+  // Создание группы для осмотра зуба (OS)
   createToothGroup(toothNumber: number, existingData?: any): FormGroup {
     return this.fb.group({
       tooth_number: [toothNumber],
@@ -119,6 +123,7 @@ export class MedicalCardFormComponent implements OnInit {
     });
   }
 
+  // Синхронизация OS с OID+ зубами
   private syncOsWithOidPlus(): void {
     const toothNumbers = new Set<number>();
     for (const control of this.oidPlusTeethArray.controls) {
@@ -140,11 +145,12 @@ export class MedicalCardFormComponent implements OnInit {
     }
   }
 
+  // Добавление нового зуба в OID+
   addOidPlusTooth(): void {
     const newGroup = this.fb.group({
       tooth_number: [null],
       localization: [''],
-      side: ['']
+      defect_types: [[]]   // массив строк
     });
     this.oidPlusTeethArray.push(newGroup);
     const toothNumberControl = newGroup.get('tooth_number');
@@ -159,7 +165,7 @@ export class MedicalCardFormComponent implements OnInit {
     this.syncOsWithOidPlus();
   }
 
-  // ========== Локализация (мультиселект, разделитель ;) ==========
+  // ========== ЛОКАЛИЗАЦИЯ (мультиселект, разделитель ;) ==========
   toggleDropdown(index: number, event: Event): void {
     event.stopPropagation();
     if (this.dropdownOpenIndex === index) {
@@ -197,47 +203,44 @@ export class MedicalCardFormComponent implements OnInit {
     group.get('localization')?.setValue(selected.join(';'));
   }
 
-  // ========== Сторона зуба (мультиселект, разделитель ;) ==========
-  toggleSideDropdown(index: number, event: Event): void {
+  // ========== ТИПЫ ДЕФЕКТОВ (работа с массивом string[]) ==========
+  toggleDefectDropdown(index: number, event: Event): void {
     event.stopPropagation();
-    if (this.sideDropdownOpenIndex === index) {
-      this.sideDropdownOpenIndex = null;
+    if (this.defectDropdownOpenIndex === index) {
+      this.defectDropdownOpenIndex = null;
     } else {
       this.closeAllDropdowns();
-      this.sideDropdownOpenIndex = index;
+      this.defectDropdownOpenIndex = index;
     }
   }
 
-  getSideDisplay(toothIndex: number): string {
+  getDefectTypesDisplay(toothIndex: number): string {
     const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
-    const value = group.get('side')?.value || '';
-    return value ? value.split(';').join(', ') : '';
+    const value = group.get('defect_types')?.value as string[] || [];
+    return value.map(id => this.defectTypeOptions.find(opt => opt.id === id)?.name || id).join(', ');
   }
 
-  isSideSelected(toothIndex: number, option: string): boolean {
+  isDefectTypeSelected(toothIndex: number, typeId: string): boolean {
     const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
-    const value = group.get('side')?.value || '';
-    return value.split(';').includes(option);
+    const value = group.get('defect_types')?.value as string[] || [];
+    return value.includes(typeId);
   }
 
-  toggleSideOption(toothIndex: number, option: string, event: Event): void {
+  toggleDefectType(toothIndex: number, typeId: string, event: Event): void {
     event.stopPropagation();
     const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
-    let current = group.get('side')?.value || '';
-    let selected: string[] = current ? current.split(';') : [];
-
-    if (selected.includes(option)) {
-      selected = selected.filter((x: string) => x !== option);
+    let selected = group.get('defect_types')?.value as string[] || [];
+    if (selected.includes(typeId)) {
+      selected = selected.filter(id => id !== typeId);
     } else {
-      selected.push(option);
+      selected = [...selected, typeId];
     }
-
-    group.get('side')?.setValue(selected.join(';'));
+    group.get('defect_types')?.setValue(selected);
   }
 
   closeAllDropdowns(): void {
     this.dropdownOpenIndex = null;
-    this.sideDropdownOpenIndex = null;
+    this.defectDropdownOpenIndex = null;
   }
 
   @HostListener('document:click', ['$event'])
@@ -249,7 +252,7 @@ export class MedicalCardFormComponent implements OnInit {
     }
   }
 
-  // ========== Загрузка и сохранение ==========
+  // ========== ЗАГРУЗКА КАРТЫ ==========
   loadCard(): void {
     this.loading = true;
     this.cardsService.getCard(this.patientId, this.cardId!).subscribe({
@@ -261,7 +264,6 @@ export class MedicalCardFormComponent implements OnInit {
           subjective: card.subjective,
           objective: {
             or: card.objective.or,
-            oid_plus: card.objective.oid_plus,
             oid_minus: card.objective.oid_minus
           }
         });
@@ -269,19 +271,13 @@ export class MedicalCardFormComponent implements OnInit {
         const oidPlusArray = this.oidPlusTeethArray;
         oidPlusArray.clear();
         card.objective.oid_plus_teeth.forEach((t: any) => {
+          // Преобразуем локализацию из старого формата (запятые -> ;)
           const localizationValue = t.localization ? t.localization.replace(/,/g, ';') : '';
-          const sideValue = t.side ? t.side.replace(/,/g, ';') : '';
-          const group = this.fb.group({
+          oidPlusArray.push(this.fb.group({
             tooth_number: [t.tooth_number],
             localization: [localizationValue],
-            side: [sideValue]
-          });
-          // Подписываемся на изменение номера зуба
-          const toothNumberControl = group.get('tooth_number');
-          toothNumberControl?.valueChanges.subscribe(() => {
-            this.syncOsWithOidPlus();
-          });
-          oidPlusArray.push(group);
+            defect_types: [t.defect_types || []]
+          }));
         });
 
         const savedOsMap = new Map<number, any>();
@@ -309,6 +305,7 @@ export class MedicalCardFormComponent implements OnInit {
     });
   }
 
+  // ========== СОХРАНЕНИЕ ==========
   onSubmit(): void {
     if (this.form.invalid) return;
     this.loading = true;
@@ -321,11 +318,11 @@ export class MedicalCardFormComponent implements OnInit {
       subjective: formValue.subjective,
       objective: {
         or: formValue.objective.or,
-        oid_plus: formValue.objective.oid_plus,
         oid_plus_teeth: formValue.objective.oid_plus_teeth.map((tooth: any) => ({
           ...tooth,
+          // Если нужно преобразовать обратно в запятые (если бэк ожидает строку), но у нас defect_types уже массив
           localization: tooth.localization ? tooth.localization.replace(/;/g, ',') : '',
-          side: tooth.side ? tooth.side.replace(/;/g, ',') : ''
+          defect_types: tooth.defect_types  // уже массив строк
         })),
         oid_minus: formValue.objective.oid_minus,
         os: formValue.objective.os

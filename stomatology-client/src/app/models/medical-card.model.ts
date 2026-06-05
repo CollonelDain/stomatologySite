@@ -14,7 +14,8 @@ export interface OsTooth {
 
 export interface OidPlusTooth {
   tooth_number: number;
-  localization: string; // 'вестибулярная' | 'оральная' | 'окклюзионная' | 'апроксимальная'
+  localization: string;      // строка с разделителем ; (на клиенте)
+  defect_types: string[];    // массив id, например ["1", "2"]
 }
 
 // Субъективные данные (S)
@@ -51,15 +52,6 @@ export interface ObjectiveData {
     orb: boolean; // тонкий биотип
     oro: boolean; // функциональная перегрузка
     orh: boolean; // нерациональная гигиена
-  };
-  oid_plus: {
-    oid_plus1: boolean; // эрозия
-    oid_plus2: boolean; // клиновидный дефект
-    oid_plus3: boolean; // повышенная стираемость
-    oid_plus4: boolean; // гипоплазия эмали
-    oid_plus5: boolean; // некроз эмали
-    oid_plus6: boolean; // травматическое повреждение
-    oid_plus7: boolean; // препарирован под реставрацию
   };
   oid_plus_teeth: OidPlusTooth[];
   oid_minus: {
