@@ -422,7 +422,7 @@ def _build_conclusion(st, diag: dict) -> list:
     story.append(Spacer(1, 1.5*cm))
     sig_data = [
         [Paragraph('Врач:', st['body_bold']),
-         Paragraph('____________________________', st['body']),
+         Paragraph(diag.get('doctor_full_name', ''), st['body']),
          Paragraph('Дата:', st['body_bold']),
          Paragraph(datetime.now().strftime('%d.%m.%Y'), st['body'])],
     ]
