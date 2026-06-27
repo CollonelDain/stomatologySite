@@ -170,7 +170,7 @@ def _build_indices(st, diag: dict) -> list:
     row1 = [
         card('ИРГЗ (%)', irgz.get('value', 0), '%',
              irgz.get('interpretation', ''), irgz.get('description', '')),
-        card('ИИГЗ (баллы)', iigz.get('value', 0), 'б.',
+        card('ИИГЗ (баллы)', iigz.get('value', 0), '',
              iigz.get('interpretation', ''), iigz.get('description', '')),
         card('NRS (КИДЧЗ)', kidchz.get('nrs_score', 0), '/10',
              kidchz.get('interpretation', ''), kidchz.get('description', '')),
@@ -320,40 +320,19 @@ def _build_teeth_table(st, diag: dict) -> list:
 
 def _build_secondary_diagnoses(st, diag: dict) -> list:
     """
-    Секция дополнительных диагнозов по типам дефектов твёрдых тканей (OID+).
-    Каждый выявленный тип дефекта → отдельная строка с буквой-кодом,
-    классом, этиологией, локализацией и поражёнными зубами.
+    Секция объективных данных — дефекты твёрдых тканей (OID+)
+    с этиологией и локализацией. Без МКБ-кодов — они идут в итоговый диагноз.
     """
-    story = [Paragraph('Дополнительные диагнозы (по типам дефектов твёрдых тканей)', st['section'])]
+    story = [Paragraph('Дефекты твёрдых тканей (Oid+)', st['section'])]
 
     secondary = diag.get('secondary_diagnoses', [])
     if not secondary:
         story.append(Paragraph(
-            'Дополнительные диагнозы на основании типов дефектов OID+ не выявлены.',
+            'Дефекты твёрдых тканей не выявлены.',
             st['body']
         ))
         return story
 
-    header = ['Код', 'Класс', 'Диагноз', 'Зубы']
-    rows = [header]
-    for sd in secondary:
-        teeth_str = ', '.join(str(t) for t in sd.get('teeth', [])) or '—'
-        rows.append([
-            sd.get('letter', ''),
-            sd.get('class_name', ''),
-            sd.get('diagnosis', ''),
-            teeth_str,
-        ])
-
-    col_w = [1.2*cm, 5*cm, 7*cm, 3.8*cm]
-    table_data = [[Paragraph(str(c), st['body']) for c in row] for row in rows]
-    t = Table(table_data, colWidths=col_w, repeatRows=1)
-    t.setStyle(_table_style(COLOR_PRIMARY))
-    story.append(t)
-
-    # Детализация с этиологией и локализацией
-    story.append(Spacer(1, 0.2*cm))
-    story.append(Paragraph('Детализация по классам дефектов:', st['label']))
     for sd in secondary:
         teeth_str = ', '.join(str(t) for t in sd.get('teeth', [])) or '—'
         story.append(Paragraph(
@@ -365,7 +344,7 @@ def _build_secondary_diagnoses(st, diag: dict) -> list:
             st['body']
         ))
         story.append(Paragraph(
-            f"Типичная локализация: {sd.get('localization', '—')}",
+            f"Локализация: {sd.get('localization', '—')}",
             st['body']
         ))
         story.append(Spacer(1, 0.15*cm))
@@ -373,20 +352,71 @@ def _build_secondary_diagnoses(st, diag: dict) -> list:
     return story
 
 
+def _build_diagnosis_summary(st, diag: dict) -> list:
+    """
+    Итоговый диагноз по МКБ-10:
+      — Основной:      К03.8 Чувствительный дентин (форма, зубы)
+      — Сопутствующие: код МКБ расшифровка (зубы)
+    Генерируется автоматически из compute_diagnosis.
+    """
+    story = [
+        HRFlowable(width='100%', thickness=1.5, color=COLOR_PRIMARY, spaceAfter=6),
+        Paragraph('Диагноз', st['section']),
+    ]
+
+    # ── Основной диагноз ──────────────────────────────────────────────────────
+    primary = diag.get('primary_diagnosis', {})
+    story.append(Paragraph('Основной диагноз:', st['label']))
+
+    if primary.get('icd_code'):
+        teeth_str = ', '.join(str(t) for t in primary.get('teeth', []))
+        teeth_note = f' (зубы: {teeth_str})' if teeth_str else ''
+        story.append(Paragraph(
+            f"<b>{primary['icd_code']}</b> {primary['icd_title']}, "
+            f"{primary['form']} форма{teeth_note}",
+            st['body_bold']
+        ))
+    else:
+        story.append(Paragraph('Гиперестезия дентина не выявлена.', st['body']))
+
+    # ── Сопутствующие диагнозы ────────────────────────────────────────────────
+    secondary = diag.get('secondary_diagnoses', [])
+    if secondary:
+        story.append(Spacer(1, 0.25*cm))
+        story.append(Paragraph('Сопутствующие заболевания:', st['label']))
+
+        rows = [['МКБ-10', 'Диагноз', 'Зубы']]
+        for sd in secondary:
+            teeth_str = ', '.join(str(t) for t in sd.get('teeth', [])) or '—'
+            if sd.get('icd_code') and sd.get('icd_title'):
+                icd_cell = sd['icd_code']
+                diag_cell = sd['icd_title']
+            else:
+                icd_cell = sd.get('letter', '—')
+                diag_cell = sd.get('diagnosis', '—')
+            rows.append([icd_cell, diag_cell, teeth_str])
+
+        col_w = [2.2*cm, 11.3*cm, 3.5*cm]
+        table_data = [[Paragraph(str(c), st['body']) for c in row] for row in rows]
+        t = Table(table_data, colWidths=col_w, repeatRows=1)
+        t.setStyle(_table_style(COLOR_ACCENT))
+        story.append(t)
+
+    return story
+
+
 def _build_conclusion(st, diag: dict) -> list:
-    """Блок заключения врача."""
+    """Блок комментария врача (diagnosis_text)."""
     story = [
         Spacer(1, 0.3*cm),
         HRFlowable(width='100%', thickness=0.5, color=COLOR_DARK_GRAY, spaceAfter=6),
-        Paragraph('Заключение врача', st['section']),
+        Paragraph('Комментарий', st['section']),
     ]
     text = diag.get('diagnosis_text', '').strip()
     if text:
         story.append(Paragraph(text, st['body']))
     else:
-        story.append(Paragraph(
-            '(Заключение не заполнено)', st['body']
-        ))
+        story.append(Paragraph('(Комментарий не заполнен)', st['body']))
 
     # Подпись
     story.append(Spacer(1, 1.5*cm))
@@ -437,6 +467,8 @@ def generate_diagnosis_pdf(diag: dict) -> bytes:
     story += _build_secondary_diagnoses(st, diag)
     story.append(Spacer(1, 0.3*cm))
     story += _build_teeth_table(st, diag)
+    story.append(Spacer(1, 0.3*cm))
+    story += _build_diagnosis_summary(st, diag)
     story += _build_conclusion(st, diag)
 
     # Колонтитул

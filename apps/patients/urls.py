@@ -30,7 +30,16 @@ urlpatterns = [
         views.ExaminationCardDetailView.as_view(),
         name='card-detail'
     ),
-    
+
+    # ── Справочник МКБ-10 ──────────────────────────────────────────────────────
+    # GET /patients/icd-codes/              — полный справочник
+    # GET /patients/icd-codes/?defects=1,3  — только для выбранных дефектов
+    path(
+        'icd-codes/',
+        views.ICD10CodesView.as_view(),
+        name='icd-codes'
+    ),
+
     # ── Диагностика ────────────────────────────────────────────────────────────
     path(
         '<int:patient_pk>/cards/<int:card_pk>/diagnosis/', 

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Patient, ExaminationCard
-
+from .icd10_catalog import ICD10_CODES, validate_icd_code
 
 
 # ── Валидаторы структуры JSON ─────────────────────────────────────────────────
@@ -22,16 +22,13 @@ def validate_subjective(value):
     if not isinstance(value, dict):
         raise serializers.ValidationError('subjective должен быть объектом.')
 
-    # Sc
     sc = value.get('sc', {})
     _validate_bool_keys(sc, ['sc01', 'sc02', 'sc03', 'sc04'], 'sc')
 
-    # scale_nrs
     nrs = value.get('scale_nrs', 0)
     if not isinstance(nrs, (int, float)) or not (0 <= nrs <= 10):
         raise serializers.ValidationError('scale_nrs должен быть числом от 0 до 10.')
 
-    # Sa
     sa = value.get('sa', {})
     if not isinstance(sa, dict):
         raise serializers.ValidationError('sa должен быть объектом.')
@@ -56,32 +53,65 @@ VALID_DEFECT_TYPES = {'1', '2', '3', '4', '5', '6', '7', '8'}
 def validate_objective(value):
     if not isinstance(value, dict):
         raise serializers.ValidationError('objective должен быть объектом.')
+
     or_data = value.get('or', {})
     _validate_bool_keys(or_data, ['orb', 'oro', 'orh'], 'or')
+
     oid_minus = value.get('oid_minus', {})
     _validate_bool_keys(oid_minus, ['oid_minus_n', 'oid_minus_b', 'oid_minus_s'], 'oid_minus')
+
     oid_plus_teeth = value.get('oid_plus_teeth', [])
     if not isinstance(oid_plus_teeth, list):
         raise serializers.ValidationError('oid_plus_teeth должен быть массивом.')
+
     for item in oid_plus_teeth:
         if not isinstance(item, dict):
             raise serializers.ValidationError('Каждый элемент oid_plus_teeth должен быть объектом.')
         if 'tooth_number' not in item:
             raise serializers.ValidationError('Каждый зуб в oid_plus_teeth должен иметь tooth_number.')
+
+        tooth_num = item['tooth_number']
+
+        # Валидация defect_types
         defect_types = item.get('defect_types', [])
         if not isinstance(defect_types, list):
             raise serializers.ValidationError(
-                f'oid_plus_teeth[{item["tooth_number"]}].defect_types должен быть массивом.'
+                f'oid_plus_teeth[{tooth_num}].defect_types должен быть массивом.'
             )
         for dt in defect_types:
             if str(dt) not in VALID_DEFECT_TYPES:
                 raise serializers.ValidationError(
-                    f'oid_plus_teeth[{item["tooth_number"]}].defect_types содержит '
+                    f'oid_plus_teeth[{tooth_num}].defect_types содержит '
                     f'недопустимый код «{dt}». Допустимые значения: 1–8.'
                 )
+
+        # Валидация icd_codes (опциональное поле — четвёртое поле фронта)
+        icd_codes = item.get('icd_codes', [])
+        if not isinstance(icd_codes, list):
+            raise serializers.ValidationError(
+                f'oid_plus_teeth[{tooth_num}].icd_codes должен быть массивом.'
+            )
+        defect_strs = [str(d) for d in defect_types]
+        for icd in icd_codes:
+            if not isinstance(icd, str):
+                raise serializers.ValidationError(
+                    f'oid_plus_teeth[{tooth_num}].icd_codes: каждый код должен быть строкой.'
+                )
+            if icd not in ICD10_CODES:
+                raise serializers.ValidationError(
+                    f'oid_plus_teeth[{tooth_num}].icd_codes содержит '
+                    f'неизвестный МКБ-код «{icd}».'
+                )
+            if defect_strs and not validate_icd_code(icd, defect_strs):
+                raise serializers.ValidationError(
+                    f'oid_plus_teeth[{tooth_num}].icd_codes: код «{icd}» не соответствует '
+                    f'ни одному из выбранных дефектов ({", ".join(defect_strs)}).'
+                )
+
     os_list = value.get('os', [])
     if not isinstance(os_list, list):
         raise serializers.ValidationError('os должен быть массивом.')
+    
     seen_teeth = set()
     for tooth in os_list:
         if not isinstance(tooth, dict):
