@@ -193,22 +193,26 @@ def _compute_secondary_diagnoses(oid_plus_teeth: list[dict]) -> list[dict]:
       defect_types  — список кодов дефектов ["1", "3", ...]
       icd_codes     — список МКБ-кодов, выбранных врачом ["К06.00", "К03.2", ...]
 
-    Возвращает список сопутствующих диагнозов, сгруппированных по МКБ-коду
-    (если icd_codes заполнены) или по дефекту (если не заполнены — fallback).
+    Группировка:
+      - Если icd_codes заполнены: группируем только по icd_code (уникальная строка),
+        чтобы один МКБ-код, относящийся к нескольким дефектам, не дублировался.
+      - Fallback (icd_codes не выбраны): группируем по defect_code.
 
     Структура элемента результата:
     {
         'icd_code':     'К06.00',           # None если нет МКБ
         'icd_title':    'Рецессия десны. Локальная',
-        'defect_code':  '1',
+        'defect_code':  '1',                # первый дефект, которому принадлежит МКБ
         'letter':       'Р',
         'class_name':   'Рецессия десны',
         'diagnosis':    'Рецессия десны (класс Р)',
         'teeth':        [11, 21],
     }
     """
-    # Собираем: (defect_code, icd_code) → список зубов
-    key_to_teeth: dict[tuple, list[int]] = {}
+    # icd_code → {'teeth': set(), 'defect_code': str}
+    icd_to_info: dict[str, dict] = {}
+    # defect_code → set зубов  (fallback: дефект без МКБ-кода)
+    defect_fallback: dict[str, set] = {}
 
     for tooth_item in oid_plus_teeth:
         tooth_number = tooth_item.get('tooth_number')
@@ -218,52 +222,69 @@ def _compute_secondary_diagnoses(oid_plus_teeth: list[dict]) -> list[dict]:
         if not isinstance(defect_types, list):
             continue
 
-        for code in defect_types:
-            code_str = str(code)
-            if code_str not in DEFECT_TYPE_CATALOG:
+        # Собираем все МКБ-коды, которые реально выбраны врачом для этого зуба
+        # и принадлежат хотя бы одному из выбранных дефектов
+        defect_strs = [str(d) for d in defect_types if str(d) in DEFECT_TYPE_CATALOG]
+        matched_icd: set[str] = set()
+
+        for icd in icd_codes_for_tooth:
+            if icd not in ICD10_CODES:
                 continue
+            if any(d in ICD10_CODES[icd]['defect_codes'] for d in defect_strs):
+                matched_icd.add(icd)
 
-            # Фильтруем только МКБ-коды, относящиеся к данному дефекту
-            relevant_icd = [
-                icd for icd in icd_codes_for_tooth
-                if icd in ICD10_CODES and code_str in ICD10_CODES[icd]['defect_codes']
-            ]
-
-            if relevant_icd:
-                # Группируем по каждому выбранному МКБ-коду
-                for icd in relevant_icd:
-                    key = (code_str, icd)
-                    key_to_teeth.setdefault(key, [])
-                    if tooth_number is not None:
-                        key_to_teeth[key].append(tooth_number)
-            else:
-                # Fallback: дефект без МКБ-кода
-                key = (code_str, None)
-                key_to_teeth.setdefault(key, [])
+        if matched_icd:
+            # Группируем уникально по МКБ-коду
+            for icd in matched_icd:
+                if icd not in icd_to_info:
+                    # Определяем «первичный» дефект: первый из defect_strs,
+                    # к которому относится данный МКБ-код
+                    primary_defect = next(
+                        (d for d in defect_strs if d in ICD10_CODES[icd]['defect_codes']),
+                        defect_strs[0] if defect_strs else '1'
+                    )
+                    icd_to_info[icd] = {'teeth': set(), 'defect_code': primary_defect}
                 if tooth_number is not None:
-                    key_to_teeth[key].append(tooth_number)
+                    icd_to_info[icd]['teeth'].add(tooth_number)
+        else:
+            # Fallback: МКБ не выбраны — показываем дефект без кода
+            for code_str in defect_strs:
+                defect_fallback.setdefault(code_str, set())
+                if tooth_number is not None:
+                    defect_fallback[code_str].add(tooth_number)
 
-    # Формируем результат
     result = []
-    # Сортируем: сначала по коду дефекта, потом по МКБ-коду
-    for (defect_code, icd_code) in sorted(
-        key_to_teeth.keys(),
-        key=lambda x: (int(x[0]), x[1] or '')
-    ):
-        catalog_entry = DEFECT_TYPE_CATALOG[defect_code]
-        teeth_list = sorted(set(key_to_teeth[(defect_code, icd_code)]))
-        icd_title = ICD10_CODES[icd_code]['title'] if icd_code else None
 
+    # Сопутствующие с МКБ-кодом — сортируем по МКБ-коду
+    for icd_code in sorted(icd_to_info.keys()):
+        info = icd_to_info[icd_code]
+        defect_code = info['defect_code']
+        catalog_entry = DEFECT_TYPE_CATALOG[defect_code]
         result.append({
             'icd_code': icd_code,
-            'icd_title': icd_title,
+            'icd_title': ICD10_CODES[icd_code]['title'],
             'defect_code': defect_code,
             'letter': catalog_entry['letter'],
             'class_name': catalog_entry['class_name'],
             'etiology': catalog_entry['etiology'],
             'localization': catalog_entry['localization'],
             'diagnosis': catalog_entry['diagnosis'],
-            'teeth': teeth_list,
+            'teeth': sorted(info['teeth']),
+        })
+
+    # Fallback (без МКБ) — сортируем по коду дефекта
+    for defect_code in sorted(defect_fallback.keys(), key=int):
+        catalog_entry = DEFECT_TYPE_CATALOG[defect_code]
+        result.append({
+            'icd_code': None,
+            'icd_title': None,
+            'defect_code': defect_code,
+            'letter': catalog_entry['letter'],
+            'class_name': catalog_entry['class_name'],
+            'etiology': catalog_entry['etiology'],
+            'localization': catalog_entry['localization'],
+            'diagnosis': catalog_entry['diagnosis'],
+            'teeth': sorted(defect_fallback[defect_code]),
         })
 
     return result
@@ -305,6 +326,9 @@ def compute_diagnosis(card) -> dict:
     oid_plus_teeth: list[dict] = obj.get('oid_plus_teeth', [])
     oid_minus = obj.get('oid_minus', {})
     os_teeth: list[dict] = obj.get('os', [])
+    # Флаг подтверждения основного диагноза К03.8 врачом.
+    # Если False — основной диагноз «не выявлена», сопутствующие не выводятся.
+    main_diagnosis_confirmed: bool = bool(obj.get('main_diagnosis_confirm', False))
 
     risk_factors = _checked_keys(or_data, OR_LABELS)
     no_loss_factors = _checked_keys(oid_minus, OID_MINUS_LABELS)
@@ -408,12 +432,26 @@ def compute_diagnosis(card) -> dict:
         })
 
     # ── Дополнительные диагнозы (по OID+ с МКБ-кодами) ──────────────────────
-    secondary_diagnoses = _compute_secondary_diagnoses(oid_plus_teeth)
+    # Показываются только если врач подтвердил основной диагноз К03.8
+    if main_diagnosis_confirmed:
+        secondary_diagnoses = _compute_secondary_diagnoses(oid_plus_teeth)
+    else:
+        secondary_diagnoses = []
 
     # ── Формирование финального диагноза ─────────────────────────────────────
-    primary_diagnosis = _build_primary_diagnosis(
-        n_sensitive, sensitive_teeth, irgz_form
-    )
+    # Если врач не подтвердил К03.8 — основной диагноз всегда «не выявлена»
+    if main_diagnosis_confirmed:
+        primary_diagnosis = _build_primary_diagnosis(
+            n_sensitive, sensitive_teeth, irgz_form
+        )
+    else:
+        primary_diagnosis = {
+            'icd_code': None,
+            'icd_title': None,
+            'form': None,
+            'teeth': [],
+            'description': 'Гиперестезия дентина не выявлена.',
+        }
 
     return {
         # Общие данные
