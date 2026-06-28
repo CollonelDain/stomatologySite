@@ -12,6 +12,78 @@ interface DefectTypeOption {
   name: string;
 }
 
+// Все МКБ-коды с привязкой к дефектам (хардкод)
+const ICD_CODES: Record<string, { title: string; defect_codes: string[] }> = {
+  // ===== Дефект 1: Рецессия десны =====
+  'К06.00': { title: 'Рецессия десны. Локальная', defect_codes: ['1'] },
+  'К06.01': { title: 'Рецессия десны. Генерализованная', defect_codes: ['1'] },
+  'К06.09': { title: 'Рецессия десны неуточнённая', defect_codes: ['1'] },
+
+  // ===== Дефект 2: Повышенная стираемость твердых тканей зубов =====
+  'К03.0': { title: 'Повышенное стирание зубов', defect_codes: ['2'] },
+  'К03.00': { title: 'Повышенное стирание зубов. Окклюзионное', defect_codes: ['2'] },
+  'К03.01': { title: 'Повышенное стирание зубов. Апроксимальное', defect_codes: ['2'] },
+  'К03.08': { title: 'Другое уточнённое стирание зубов', defect_codes: ['2'] },
+  'К03.09': { title: 'Стирание зубов неуточнённое', defect_codes: ['2'] },
+  'К03.1': { title: 'Сошлифовывание (абразивный износ) зубов', defect_codes: ['2', '4'] },
+  'К03.10': { title: 'Сошлифовывание зубов, вызванное зубным порошком (клиновидный дефект БДУ)', defect_codes: ['2', '4'] },
+  'К03.11': { title: 'Сошлифовывание зубов привычное', defect_codes: ['2', '4'] },
+  'К03.12': { title: 'Сошлифовывание зубов профессиональное', defect_codes: ['2', '4'] },
+  'К03.13': { title: 'Сошлифовывание зубов традиционное (ритуальное)', defect_codes: ['2', '4'] },
+  'К03.18': { title: 'Другое уточнённое сошлифовывание зубов', defect_codes: ['2', '4'] },
+  'К03.19': { title: 'Сошлифовывание зубов неуточнённое', defect_codes: ['2', '4'] },
+
+  // ===== Дефект 3: Эрозии эмали =====
+  'К03.2': { title: 'Эрозия зубов', defect_codes: ['3'] },
+  'К03.20': { title: 'Эрозия зубов профессиональная', defect_codes: ['3'] },
+  'К03.21': { title: 'Эрозия зубов, обусловленная персистирующей регургитацией или рвотой', defect_codes: ['3'] },
+  'К03.22': { title: 'Эрозия зубов, обусловленная диетой', defect_codes: ['3'] },
+  'К03.23': { title: 'Эрозия зубов, обусловленная лекарственными средствами и медикаментами', defect_codes: ['3'] },
+  'К03.24': { title: 'Эрозия зубов идиопатическая', defect_codes: ['3'] },
+  'К03.28': { title: 'Другая уточнённая эрозия зубов', defect_codes: ['3'] },
+  'К03.29': { title: 'Эрозия зубов неуточнённая', defect_codes: ['3'] },
+
+  // ===== Дефект 4: Клиновидные дефекты (уже есть выше, но для полноты дублируем) =====
+  // Коды для дефекта 4 уже добавлены в дефект 2 (К03.1, К03.10-К03.19)
+
+  // ===== Дефект 5: Флюороз и процедуры отбеливания зубов =====
+  'К00.30': { title: 'Эндемический флюороз эмали (флюороз зубов)', defect_codes: ['5'] },
+  'К00.31': { title: 'Неэндемическая крапчатость эмали (нефлюорозное потемнение эмали)', defect_codes: ['5'] },
+  'К00.39': { title: 'Крапчатые зубы неуточнённые', defect_codes: ['5'] },
+
+  // ===== Дефект 6: Травма твердых тканей зубов / Незавершенный амелогенез =====
+  'S02.50': { title: 'Перелом только эмали зуба, откол эмали', defect_codes: ['6'] },
+  'S02.51': { title: 'Перелом коронки зуба без повреждения пульпы', defect_codes: ['6'] },
+
+  // ===== Дефект 7: Гипоплазия эмали зубов =====
+  'К00.4': { title: 'Нарушение формирования зубов', defect_codes: ['7'] },
+  'К00.40': { title: 'Гипоплазия эмали', defect_codes: ['7'] },
+  'К00.41': { title: 'Перинатальная гипоплазия эмали', defect_codes: ['7'] },
+  'К00.42': { title: 'Неонатальная гипоплазия эмали', defect_codes: ['7'] },
+  'К00.43': { title: 'Аплазия и гипоплазия цемента', defect_codes: ['7'] },
+  'К00.44': { title: 'Дилацерация (трещины эмали)', defect_codes: ['7'] },
+  'К00.45': { title: 'Одонтодисплазия (региональная одонтодисплазия)', defect_codes: ['7'] },
+  'К00.46': { title: 'Зуб Тернера', defect_codes: ['7'] },
+  'К00.48': { title: 'Другие уточнённые нарушения формирования зубов', defect_codes: ['7'] },
+  'К00.49': { title: 'Нарушения формирования зубов неуточнённые', defect_codes: ['7'] },
+
+  // ===== Дефект 8: Некроз эмали =====
+  'К03.81': { title: 'Изменения эмали, обусловленные облучением (радиационный, постлучевой некроз)', defect_codes: ['8'] },
+
+  'К00.50': { title: 'Незавершённый амелогенез', defect_codes: ['1', '2', '3', '4', '5', '6', '7', '8'] },
+};
+
+// Обратный индекс для быстрой фильтрации: дефект → список кодов
+const ICD_BY_DEFECT: Record<string, string[]> = {};
+Object.entries(ICD_CODES).forEach(([code, entry]) => {
+  entry.defect_codes.forEach((defectId: string) => {
+    if (!ICD_BY_DEFECT[defectId]) {
+      ICD_BY_DEFECT[defectId] = [];
+    }
+    ICD_BY_DEFECT[defectId].push(code);
+  });
+});
+
 @Component({
   selector: 'app-medical-card-form',
   standalone: true,
@@ -30,17 +102,16 @@ export class MedicalCardFormComponent implements OnInit {
   cardId: number | null = null;
   loading = false;
 
-  // Варианты локализации (первый мультиселект)
   localizationOptions: string[] = [
     'вестибулярная',
     'оральная',
     'окклюзионная',
     'апроксимальная медиальная',
     'апроксимальная дистальная',
-    'корень зуба'
+    'корень зуба',
+    'пришеечная область'
   ];
 
-  // Варианты типов дефектов (второй мультиселект) – id и отображаемое имя
   defectTypeOptions: DefectTypeOption[] = [
     { id: '1', name: 'рецессия десны' },
     { id: '2', name: 'повышенная стираемость твердых тканей зубов' },
@@ -52,9 +123,9 @@ export class MedicalCardFormComponent implements OnInit {
     { id: '8', name: 'некроз эмали' }
   ];
 
-  // Индексы открытых dropdown
   dropdownOpenIndex: number | null = null;
   defectDropdownOpenIndex: number | null = null;
+  icdDropdownOpenIndex: number | null = null;
 
   get teethArray(): FormArray {
     return this.form.get('objective.os') as FormArray;
@@ -89,6 +160,7 @@ export class MedicalCardFormComponent implements OnInit {
       or: this.fb.group({
         orb: [false], oro: [false], orh: [false]
       }),
+      main_diagnosis_confirm: [false],
       oid_plus_teeth: this.fb.array([]),
       oid_minus: this.fb.group({
         oid_minus_n: [false], oid_minus_b: [false], oid_minus_s: [false]
@@ -110,62 +182,40 @@ export class MedicalCardFormComponent implements OnInit {
     });
   }
 
-  // Создание группы для осмотра зуба (OS)
-  createToothGroup(toothNumber: number, existingData?: any): FormGroup {
-    return this.fb.group({
-      tooth_number: [toothNumber],
-      heat: [existingData?.heat || false],
-      cold: [existingData?.cold || false],
-      air: [existingData?.air || false],
-      probe: [existingData?.probe || false],
-      osmosis: [existingData?.osmosis || false],
-      eod: [existingData?.eod || null]
-    });
-  }
-
-  // Синхронизация OS с OID+ зубами
-  private syncOsWithOidPlus(): void {
-    const toothNumbers = new Set<number>();
-    for (const control of this.oidPlusTeethArray.controls) {
-      const num = control.get('tooth_number')?.value;
-      if (num && !toothNumbers.has(num)) toothNumbers.add(num);
+  // ---------- Фильтрация МКБ (на фронте) ----------
+  private getFilteredIcdCodes(defectTypes: string[]): string[] {
+    if (!defectTypes || defectTypes.length === 0) {
+      return Object.keys(ICD_CODES);
     }
 
-    const existingOsMap = new Map<number, any>();
-    for (const control of this.teethArray.controls) {
-      const num = control.get('tooth_number')?.value;
-      if (num) existingOsMap.set(num, control.value);
+    // Если выбраны все 8 дефектов, возвращаем все коды
+    const allDefectIds = this.defectTypeOptions.map(d => d.id);
+    const isAllSelected = allDefectIds.every(id => defectTypes.includes(id));
+    if (isAllSelected) {
+      return Object.keys(ICD_CODES);
     }
 
-    this.teethArray.clear();
-    const sortedNumbers = Array.from(toothNumbers).sort((a, b) => a - b);
-    for (const num of sortedNumbers) {
-      const existing = existingOsMap.get(num);
-      this.teethArray.push(this.createToothGroup(num, existing));
+    // Фильтруем по выбранным дефектам
+    const codes = new Set<string>();
+    for (const defect of defectTypes) {
+      const found = ICD_BY_DEFECT[defect] || [];
+      found.forEach(c => codes.add(c));
     }
+    return Array.from(codes);
   }
 
-  // Добавление нового зуба в OID+
-  addOidPlusTooth(): void {
-    const newGroup = this.fb.group({
-      tooth_number: [null],
-      localization: [''],
-      defect_types: [[]]   // массив строк
-    });
-    this.oidPlusTeethArray.push(newGroup);
-    const toothNumberControl = newGroup.get('tooth_number');
-    toothNumberControl?.valueChanges.subscribe(() => {
-      this.syncOsWithOidPlus();
-    });
-    this.syncOsWithOidPlus();
+  // Метод для шаблона
+  getIcdOptionsForTooth(toothIndex: number): { code: string; title: string }[] {
+    const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
+    const defectTypes = group.get('defect_types')?.value as string[] || [];
+    const filteredCodes = this.getFilteredIcdCodes(defectTypes);
+    return filteredCodes.map(code => ({
+      code: code,
+      title: ICD_CODES[code]?.title || code
+    }));
   }
 
-  removeOidPlusTooth(index: number): void {
-    this.oidPlusTeethArray.removeAt(index);
-    this.syncOsWithOidPlus();
-  }
-
-  // ========== ЛОКАЛИЗАЦИЯ (мультиселект, разделитель ;) ==========
+  // ---------- Локализация ----------
   toggleDropdown(index: number, event: Event): void {
     event.stopPropagation();
     if (this.dropdownOpenIndex === index) {
@@ -203,7 +253,7 @@ export class MedicalCardFormComponent implements OnInit {
     group.get('localization')?.setValue(selected.join(';'));
   }
 
-  // ========== ТИПЫ ДЕФЕКТОВ (работа с массивом string[]) ==========
+  // ---------- Типы дефектов ----------
   toggleDefectDropdown(index: number, event: Event): void {
     event.stopPropagation();
     if (this.defectDropdownOpenIndex === index) {
@@ -238,9 +288,49 @@ export class MedicalCardFormComponent implements OnInit {
     group.get('defect_types')?.setValue(selected);
   }
 
+  // ---------- Коды МКБ ----------
+  toggleIcdDropdown(index: number, event: Event): void {
+  event.stopPropagation();
+  // Если чекбокс не активирован, не открываем
+  if (!this.form.get('objective.main_diagnosis_confirm')?.value) {
+    return;
+  }
+  if (this.icdDropdownOpenIndex === index) {
+    this.icdDropdownOpenIndex = null;
+  } else {
+    this.closeAllDropdowns();
+    this.icdDropdownOpenIndex = index;
+  }
+}
+
+  getIcdDisplay(toothIndex: number): string {
+    const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
+    const value = group.get('icd_codes')?.value as string[] || [];
+    return value.join(', ');
+  }
+
+  isIcdSelected(toothIndex: number, code: string): boolean {
+    const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
+    const value = group.get('icd_codes')?.value as string[] || [];
+    return value.includes(code);
+  }
+
+  toggleIcdOption(toothIndex: number, code: string, event: Event): void {
+    event.stopPropagation();
+    const group = this.oidPlusTeethArray.at(toothIndex) as FormGroup;
+    let selected = group.get('icd_codes')?.value as string[] || [];
+    if (selected.includes(code)) {
+      selected = selected.filter(c => c !== code);
+    } else {
+      selected = [...selected, code];
+    }
+    group.get('icd_codes')?.setValue(selected);
+  }
+
   closeAllDropdowns(): void {
     this.dropdownOpenIndex = null;
     this.defectDropdownOpenIndex = null;
+    this.icdDropdownOpenIndex = null;
   }
 
   @HostListener('document:click', ['$event'])
@@ -252,7 +342,62 @@ export class MedicalCardFormComponent implements OnInit {
     }
   }
 
-  // ========== ЗАГРУЗКА КАРТЫ ==========
+  // ---------- Управление зубами ----------
+  addOidPlusTooth(): void {
+    const newGroup = this.fb.group({
+      tooth_number: [null],
+      localization: [''],
+      defect_types: [[]],
+      icd_codes: [[]]
+    });
+    this.oidPlusTeethArray.push(newGroup);
+    const toothNumberControl = newGroup.get('tooth_number');
+    toothNumberControl?.valueChanges.subscribe(() => {
+      this.syncOsWithOidPlus();
+    });
+    this.syncOsWithOidPlus();
+  }
+
+  removeOidPlusTooth(index: number): void {
+    this.oidPlusTeethArray.removeAt(index);
+    this.syncOsWithOidPlus();
+  }
+
+  // ---------- Синхронизация OS ----------
+  createToothGroup(toothNumber: number, existingData?: any): FormGroup {
+    return this.fb.group({
+      tooth_number: [toothNumber],
+      heat: [existingData?.heat || false],
+      cold: [existingData?.cold || false],
+      air: [existingData?.air || false],
+      probe: [existingData?.probe || false],
+      osmosis: [existingData?.osmosis || false],
+      eod: [existingData?.eod || null]
+    });
+  }
+
+  private syncOsWithOidPlus(): void {
+    const toothNumbers = new Set<number>();
+    for (const control of this.oidPlusTeethArray.controls) {
+      const num = control.get('tooth_number')?.value;
+      if (num && !toothNumbers.has(num)) toothNumbers.add(num);
+    }
+
+    const existingOsMap = new Map<number, any>();
+    for (const control of this.teethArray.controls) {
+      const num = control.get('tooth_number')?.value;
+      if (num) existingOsMap.set(num, control.value);
+    }
+
+    this.teethArray.clear();
+    const sortedNumbers = Array.from(toothNumbers).sort((a, b) => a - b);
+    for (const num of sortedNumbers) {
+      const existing = existingOsMap.get(num);
+      this.teethArray.push(this.createToothGroup(num, existing));
+    }
+  }
+
+  // ---------- Загрузка карты ----------
   loadCard(): void {
     this.loading = true;
     this.cardsService.getCard(this.patientId, this.cardId!).subscribe({
@@ -264,6 +409,7 @@ export class MedicalCardFormComponent implements OnInit {
           subjective: card.subjective,
           objective: {
             or: card.objective.or,
+            main_diagnosis_confirm: card.objective.main_diagnosis_confirm || false,
             oid_minus: card.objective.oid_minus
           }
         });
@@ -271,12 +417,12 @@ export class MedicalCardFormComponent implements OnInit {
         const oidPlusArray = this.oidPlusTeethArray;
         oidPlusArray.clear();
         card.objective.oid_plus_teeth.forEach((t: any) => {
-          // Преобразуем локализацию из старого формата (запятые -> ;)
           const localizationValue = t.localization ? t.localization.replace(/,/g, ';') : '';
           oidPlusArray.push(this.fb.group({
             tooth_number: [t.tooth_number],
             localization: [localizationValue],
-            defect_types: [t.defect_types || []]
+            defect_types: [t.defect_types || []],
+            icd_codes: [t.icd_codes || []]
           }));
         });
 
@@ -305,7 +451,7 @@ export class MedicalCardFormComponent implements OnInit {
     });
   }
 
-  // ========== СОХРАНЕНИЕ ==========
+  // ---------- Сохранение ----------
   onSubmit(): void {
     if (this.form.invalid) return;
     this.loading = true;
@@ -318,11 +464,12 @@ export class MedicalCardFormComponent implements OnInit {
       subjective: formValue.subjective,
       objective: {
         or: formValue.objective.or,
+        main_diagnosis_confirm: formValue.objective.main_diagnosis_confirm || false,
         oid_plus_teeth: formValue.objective.oid_plus_teeth.map((tooth: any) => ({
           ...tooth,
-          // Если нужно преобразовать обратно в запятые (если бэк ожидает строку), но у нас defect_types уже массив
           localization: tooth.localization ? tooth.localization.replace(/;/g, ',') : '',
-          defect_types: tooth.defect_types  // уже массив строк
+          defect_types: tooth.defect_types,
+          icd_codes: tooth.icd_codes
         })),
         oid_minus: formValue.objective.oid_minus,
         os: formValue.objective.os

@@ -34,12 +34,8 @@
         <div class="form-group">
           <label>Оценка боли по шкале NRS (0-10)</label>
           <div class="range-wrapper">
-            <input type="range" 
-                  formControlName="scale_nrs" 
-                  min="0" 
-                  max="10" 
-                  step="1"
-                  [style.--fill-percent]="(form.get('subjective.scale_nrs')?.value || 0) / 10 * 100 + '%'">
+            <input type="range" formControlName="scale_nrs" min="0" max="10" step="1"
+              [style.--fill-percent]="(form.get('subjective.scale_nrs')?.value || 0) / 10 * 100 + '%'">
             <span>{{ form.get('subjective.scale_nrs')?.value }}</span>
           </div>
         </div>
@@ -92,7 +88,15 @@
           </div>
         </div>
 
-        <!-- Блок зубов с дефектами (oid_plus_teeth) – два мультиселекта -->
+        <!-- Чувствительный дентин (глобальный) -->
+        <div class="sensitive-dentin-wrapper form-group">
+          <label>
+            <input type="checkbox" formControlName="main_diagnosis_confirm">
+            К03.8 Чувствительный дентин
+          </label>
+        </div>
+
+        <!-- Блок зубов с дефектами (oid_plus_teeth) – три мультиселекта -->
         <div class="form-group">
           <label>Зубы с дефектами (OID+ зубы)</label>
           <button type="button" class="btn-secondary" (click)="addOidPlusTooth()">+ Добавить зуб</button>
@@ -104,34 +108,50 @@
               <!-- Dropdown локализации (мульти) -->
               <div class="custom-dropdown" [class.open]="dropdownOpenIndex === i">
                 <div class="dropdown-trigger" (click)="toggleDropdown(i, $event)">
-                  <span class="selected-values" [title]="getLocalizationDisplay(i)">{{ getLocalizationDisplay(i) || 'Локализация' }}</span>
+                  <span class="selected-values" [title]="getLocalizationDisplay(i)">{{ getLocalizationDisplay(i) ||
+                    'Локализация' }}</span>
                   <span class="dropdown-arrow">▼</span>
                 </div>
                 <div class="dropdown-panel" *ngIf="dropdownOpenIndex === i">
                   <div class="dropdown-options">
-                    <div *ngFor="let loc of localizationOptions" 
-                         class="dropdown-option"
-                         [class.selected]="isLocalizationSelected(i, loc)"
-                         (click)="toggleLocalizationOption(i, loc, $event)">
+                    <div *ngFor="let loc of localizationOptions" class="dropdown-option"
+                      [class.selected]="isLocalizationSelected(i, loc)"
+                      (click)="toggleLocalizationOption(i, loc, $event)">
                       {{ loc }}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Dropdown типов дефектов (мульти, defect_types) -->
+              <!-- Dropdown типов дефектов (мульти) -->
               <div class="custom-dropdown" [class.open]="defectDropdownOpenIndex === i">
                 <div class="dropdown-trigger" (click)="toggleDefectDropdown(i, $event)">
-                  <span class="selected-values" [title]="getDefectTypesDisplay(i)">{{ getDefectTypesDisplay(i) || 'Типы дефектов' }}</span>
+                  <span class="selected-values" [title]="getDefectTypesDisplay(i)">{{ getDefectTypesDisplay(i) || 'Типы
+                    дефектов' }}</span>
                   <span class="dropdown-arrow">▼</span>
                 </div>
                 <div class="dropdown-panel" *ngIf="defectDropdownOpenIndex === i">
                   <div class="dropdown-options">
-                    <div *ngFor="let opt of defectTypeOptions" 
-                         class="dropdown-option"
-                         [class.selected]="isDefectTypeSelected(i, opt.id)"
-                         (click)="toggleDefectType(i, opt.id, $event)">
+                    <div *ngFor="let opt of defectTypeOptions" class="dropdown-option"
+                      [class.selected]="isDefectTypeSelected(i, opt.id)" (click)="toggleDefectType(i, opt.id, $event)">
                       {{ opt.name }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dropdown кодов МКБ (мульти) -->
+              <div class="custom-dropdown" [class.open]="icdDropdownOpenIndex === i"
+                [class.disabled]="!form.get('objective.main_diagnosis_confirm')?.value">
+                <div class="dropdown-trigger" (click)="toggleIcdDropdown(i, $event)">
+                  <span class="selected-values" [title]="getIcdDisplay(i)">{{ getIcdDisplay(i) || 'Коды МКБ' }}</span>
+                  <span class="dropdown-arrow">▼</span>
+                </div>
+                <div class="dropdown-panel" *ngIf="icdDropdownOpenIndex === i">
+                  <div class="dropdown-options">
+                    <div *ngFor="let item of getIcdOptionsForTooth(i)" class="dropdown-option"
+                      [class.selected]="isIcdSelected(i, item.code)" (click)="toggleIcdOption(i, item.code, $event)">
+                      {{ item.code }} {{ item.title }}
                     </div>
                   </div>
                 </div>
@@ -174,7 +194,7 @@
 
       <!-- Заключение врача -->
       <div class="form-group">
-        <label>Заключение врача (диагноз)/ комментарии</label>
+        <label>Комментарий</label>
         <textarea formControlName="diagnosis_text" rows="4" placeholder="Введите заключение..."></textarea>
       </div>
 

@@ -26,6 +26,7 @@ export class MedicalCardsService {
   }
 
   updateCard(patientId: number, cardId: number, data: Partial<MedicalCard>): Observable<MedicalCard> {
+    console.log(data)
     return this.http.put<MedicalCard>(`${this.apiUrl}/patients/${patientId}/cards/${cardId}/`, data);
   }
 

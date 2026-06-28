@@ -16,6 +16,7 @@ export interface OidPlusTooth {
   tooth_number: number;
   localization: string;      // строка с разделителем ; (на клиенте)
   defect_types: string[];    // массив id, например ["1", "2"]
+  icd_codes: string[]; 
 }
 
 // Субъективные данные (S)
@@ -53,6 +54,7 @@ export interface ObjectiveData {
     oro: boolean; // функциональная перегрузка
     orh: boolean; // нерациональная гигиена
   };
+  main_diagnosis_confirm: boolean;
   oid_plus_teeth: OidPlusTooth[];
   oid_minus: {
     oid_minus_n: boolean; // обнажение шейки зуба
