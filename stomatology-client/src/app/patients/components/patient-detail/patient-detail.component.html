@@ -3,16 +3,13 @@
   <div class="patient-info-section" *ngIf="!patientLoading; else patientLoadingBlock">
     <div *ngIf="patient; else patientErrorBlock">
       <div class="info-header">
-        <h2>Пациент: {{ patient.full_name }}</h2>
+        <h2>Пациент: {{ patient.patient_code }}</h2>
         <button class="toggle-info-btn" (click)="togglePatientInfo()" *ngIf="isMobile">
           <span class="arrow" [class.collapsed]="!showPatientInfo">▼</span>
         </button>
       </div>
       <div class="info-vertical" *ngIf="showPatientInfo">
         <div><strong>Код пациента:</strong> {{ patient.patient_code }}</div>
-        <div><strong>Email:</strong> {{ patient.email || '—' }}</div>
-        <div><strong>Телефон:</strong> {{ patient.phone || '—' }}</div>
-        <div><strong>Дата рождения:</strong> {{ (patient.date_of_birth | date:'dd.MM.yyyy') || '—' }}</div>
         <div><strong>Зарегистрирован:</strong> {{ patient.created_at | date:'dd.MM.yyyy' }}</div>
         <div><strong>Последнее изменение:</strong> {{ patient.updated_at | date:'dd.MM.yyyy' }}</div>
         <button class="edit-patient-btn" (click)="openEditPatientModal()">Редактировать пациента</button>
@@ -33,7 +30,7 @@
     <div class="detail-header">
       <h2>История посещений</h2>
       <div class="cards-actions">
-        <input type="date" class="card-search-input" placeholder="Фильтр по дате" (input)="onVisitDateSearch($event)">
+        <!-- <input type="date" class="card-search-input" placeholder="Фильтр по дате" (input)="onVisitDateSearch($event)"> -->
         <button class="add-card-btn" (click)="openAddCardForm()">+ Добавить приём</button>
       </div>
     </div>
