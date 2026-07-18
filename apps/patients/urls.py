@@ -26,6 +26,11 @@ urlpatterns = [
         name='card-latest'
     ),
     path(
+        '<int:patient_pk>/cards/diagnosis-history/',
+        views.PatientCardsDiagnosisHistoryView.as_view(),
+        name='card-diagnosis-history'
+    ),
+    path(
         '<int:patient_pk>/cards/<int:pk>/',
         views.ExaminationCardDetailView.as_view(),
         name='card-detail'

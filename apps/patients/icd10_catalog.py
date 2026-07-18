@@ -225,3 +225,27 @@ def validate_icd_code(code: str, defect_codes: list[str]) -> bool:
     if not entry:
         return False
     return any(d in entry['defect_codes'] for d in defect_codes)
+
+
+def decode_icd_codes(codes: list[str]) -> list[dict]:
+    """
+    Расшифровывает список МКБ-кодов в человекочитаемый вид.
+
+    Пример:
+      decode_icd_codes(['К06.00', 'К03.2']) →
+      [
+        {'code': 'К06.00', 'title': 'Рецессия десны. Локальная'},
+        {'code': 'К03.2',  'title': 'Эрозия зубов'},
+      ]
+
+    Если код отсутствует в справочнике — title будет None (не должно
+    происходить в норме, т.к. коды валидируются при сохранении карты).
+    """
+    result = []
+    for code in codes or []:
+        entry = ICD10_CODES.get(code)
+        result.append({
+            'code': code,
+            'title': entry['title'] if entry else None,
+        })
+    return result

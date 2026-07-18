@@ -19,7 +19,7 @@ from .serializers import (
 
 from .diagnosis import compute_diagnosis
 from .pdf_generator import generate_diagnosis_pdf
-from .icd10_catalog import ICD10_CODES, ICD10_BY_DEFECT, get_icd_codes_for_defects
+from .icd10_catalog import ICD10_CODES, ICD10_BY_DEFECT, get_icd_codes_for_defects, decode_icd_codes
 
 
 # ── Вспомогательная функция ────────────────────────────────────────────────────
@@ -234,6 +234,100 @@ class LatestExaminationCardView(generics.RetrieveUpdateAPIView):
         if not card:
             raise NotFound('У пациента ещё нет карт осмотра.')
         return card
+
+
+class PatientCardsDiagnosisHistoryView(APIView):
+    """
+    GET /patients/<patient_id>/cards/diagnosis-history/
+
+    Возвращает ВСЕ карты осмотра пациента. Для каждой карты отдаётся:
+      - вся информация карты как есть (сырые subjective/objective JSON-данные,
+        дата посещения, число зубов, текст заключения врача, даты создания/
+        обновления) — то, что врач видит и редактирует в самой карте;
+      - плюс полностью вычисленный диагноз поверх этих данных (ИРГЗ, ИИГЗ,
+        степень по Федорову, КИДЧЗ, ЭОД, основной и сопутствующие диагнозы,
+        детализация по зубам).
+
+    Отличие от /diagnosis/ (которая отдаёт диагноз только для одной карты):
+      - здесь возвращается история по всем картам пациента сразу, включая
+        исходные (не только вычисленные) данные карты;
+      - в teeth_details[].icd_codes вместо «голых» МКБ-кодов (["К06.00"])
+        отдаётся их расшифровка: [{"code": "К06.00", "title": "Рецессия
+        десны. Локальная"}], чтобы фронтенду не нужно было отдельно
+        запрашивать /icd-codes/ и сопоставлять коды самостоятельно.
+
+    Карты отсортированы от новых к старым (по visit_date, затем created_at),
+    как и задано в Meta.ordering модели ExaminationCard.
+
+    Ответ:
+    {
+      "patient_id": 1,
+      "patient_full_name": "Иванов Иван Иванович",
+      "cards_count": 3,
+      "cards": [
+        {
+          "card_id": 12,
+          "visit_date": "2026-07-01",
+          "tooth_count": 28,
+          "created_at": "...",
+          "updated_at": "...",
+
+          # ── Сырые данные карты (как введены/сохранены врачом) ──────────
+          "subjective": { "sc": {...}, "scale_nrs": 5, "sa": {...} },
+          "objective": {
+            "or": {...},
+            "oid_plus_teeth": [...],
+            "oid_minus": {...},
+            "os": [...]
+          },
+          "diagnosis_text": "...",
+
+          # ── Вычисленный диагноз (compute_diagnosis) ─────────────────────
+          ... все поля compute_diagnosis() (indices, teeth_details и т.д.) ...,
+          "teeth_details": [
+            {
+              "tooth_number": 11,
+              ...,
+              "icd_codes": [{"code": "К06.00", "title": "Рецессия десны. Локальная"}]
+            }
+          ]
+        },
+        ...
+      ]
+    }
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, patient_pk: int):
+        patient = get_patient_for_doctor(patient_pk, request.user)
+        cards = ExaminationCard.objects.filter(patient=patient)  # ordering из Meta модели
+
+        cards_data = []
+        for card in cards:
+            diag = compute_diagnosis(card)
+
+            # Расшифровываем МКБ-коды для каждого зуба вместо голых кодов
+            for tooth in diag.get('teeth_details', []):
+                tooth['icd_codes'] = decode_icd_codes(tooth.get('icd_codes', []))
+
+            card_data = {
+                'card_id': card.id,
+                # Сырые данные карты — то, что врач ввёл и может редактировать
+                'subjective': card.subjective,
+                'objective': card.objective,
+                'created_at': card.created_at,
+                'updated_at': card.updated_at,
+                # Вычисленный диагноз поверх этих данных
+                **diag,
+            }
+            cards_data.append(card_data)
+
+        return Response({
+            'patient_id': patient.id,
+            'patient_full_name': patient.full_name,
+            'cards_count': len(cards_data),
+            'cards': cards_data,
+        }, status=status.HTTP_200_OK)
 
 
 # ── Справочник МКБ-10 ──────────────────────────────────────────────────────────
