@@ -29,10 +29,10 @@ export interface PatientsList {
 
 export interface PatientCreateUpdate {
     patient_code: string;
-    first_name: string;
-    last_name: string;
-    middle_name?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    date_of_birth?: string | null;
+    // first_name: string;
+    // last_name: string;
+    // middle_name?: string | null;
+    // email?: string | null;
+    // phone?: string | null;
+    // date_of_birth?: string | null;
 }

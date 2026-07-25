@@ -16,7 +16,7 @@ class Patient(models.Model):
     )
     first_name = models.CharField(blank=True, max_length=100, verbose_name='Имя')
     last_name = models.CharField(blank=True, max_length=100, verbose_name='Фамилия')
-    middle_name = models.CharField(blank=True, max_length=100, blank=True, verbose_name='Отчество')
+    middle_name = models.CharField(blank=True, max_length=100, verbose_name='Отчество')
     patient_code = models.CharField(max_length=50, verbose_name='Код пациента (из история болезни)')
     email = models.EmailField(blank=True, null=True, verbose_name='Email')
     date_of_birth = models.DateField(blank=True, null=True, verbose_name='Дата рождения')

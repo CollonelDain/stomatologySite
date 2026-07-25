@@ -27,12 +27,12 @@ export class PatientFormComponent implements OnInit {
 
     patientForm = this.fb.group({
         patient_code: ['', Validators.required],
-        first_name: ['', Validators.required],
-        last_name: ['', Validators.required],
-        middle_name: [''],
-        email: ['', Validators.email],
-        phone: [''],
-        date_of_birth: ['']
+        // first_name: ['', Validators.required],
+        // last_name: ['', Validators.required],
+        // middle_name: [''],
+        // email: ['', Validators.email],
+        // phone: [''],
+        // date_of_birth: ['']
     });
 
     ngOnInit(): void {
@@ -40,12 +40,12 @@ export class PatientFormComponent implements OnInit {
             this.isEdit = true;
             this.patientForm.patchValue({
                 patient_code: this.editData.patient_code,
-                first_name: this.editData.first_name,
-                last_name: this.editData.last_name,
-                middle_name: this.editData.middle_name || '',
-                email: this.editData.email || '',
-                phone: this.editData.phone || '',
-                date_of_birth: this.editData.date_of_birth || ''
+                // first_name: this.editData.first_name,
+                // last_name: this.editData.last_name,
+                // middle_name: this.editData.middle_name || '',
+                // email: this.editData.email || '',
+                // phone: this.editData.phone || '',
+                // date_of_birth: this.editData.date_of_birth || ''
             });
         }
     }
@@ -58,12 +58,12 @@ export class PatientFormComponent implements OnInit {
         const formValue = this.patientForm.value;
         const payload: PatientCreateUpdate = {
             patient_code: formValue.patient_code!,
-            first_name: formValue.first_name!,
-            last_name: formValue.last_name!,
-            middle_name: formValue.middle_name || null,
-            email: formValue.email || null,
-            phone: formValue.phone || null,
-            date_of_birth: formValue.date_of_birth || null
+            // first_name: formValue.first_name!,
+            // last_name: formValue.last_name!,
+            // middle_name: formValue.middle_name || null,
+            // email: formValue.email || null,
+            // phone: formValue.phone || null,
+            // date_of_birth: formValue.date_of_birth || null
         };
 
         const request$ = this.isEdit && this.editData?.id
